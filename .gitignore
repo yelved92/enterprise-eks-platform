@@ -1,0 +1,48 @@
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/**/terraform.tfstate
+terraform/**/terraform.tfstate.backup
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.auto.tfvars
+crash.log
+
+# Kubernetes
+**/kubeconfig*
+*.kubeconfig
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.pem
+*.key
+*.cert
+**/secrets/**
+!**/secrets/example-*
+
+# Helm
+helm/**/charts/
+helm/**/*.tgz
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+.env.local
+*.env.local
+
+# Misc
+*.log
+tmp/
