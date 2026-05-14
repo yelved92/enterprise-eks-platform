@@ -1,0 +1,87 @@
+# =============================================================================
+# Environment Validation Playbook
+# =============================================================================
+# Validates that the local environment is properly configured for EKS platform
+# development and deployment.
+#
+# Usage:
+#   ansible-playbook playbooks/validate-environment.yml
+# =============================================================================
+
+---
+- name: Validate Local Development Environment
+  hosts: bootstrap
+  gather_facts: yes
+
+  tasks:
+    - name: Check required tools are installed
+      ansible.builtin.assert:
+        that:
+          - lookup('ansible.builtin.pipe', 'which aws') != ''
+          - lookup('ansible.builtin.pipe', 'which terraform') != ''
+          - lookup('ansible.builtin.pipe', 'which kubectl') != ''
+          - lookup('ansible.builtin.pipe', 'which helm') != ''
+        fail_msg: "One or more required tools are missing. Install: awscli, terraform, kubectl, helm"
+        success_msg: "All required tools are installed."
+
+    - name: Check AWS credentials are configured
+      ansible.builtin.command: aws sts get-caller-identity
+      register: aws_identity
+      changed_when: false
+
+    - name: Display AWS identity
+      ansible.builtin.debug:
+        msg:
+          - "ARN: {{ aws_identity.stdout | from_json | json_query('Arn') }}"
+          - "Account: {{ aws_identity.stdout | from_json | json_query('Account') }}"
+          - "User ID: {{ aws_identity.stdout | from_json | json_query('UserId') }}"
+
+    - name: Check Terraform configuration files exist
+      ansible.builtin.stat:
+        path: "{{ playbook_dir }}/../../terraform/versions.tf"
+      register: terraform_config
+
+    - name: Verify Terraform configuration
+      ansible.builtin.assert:
+        that:
+          - terraform_config.stat.exists
+        fail_msg: "Terraform configuration not found. Ensure terraform/versions.tf exists."
+        success_msg: "Terraform configuration found."
+
+    - name: Check Git repository status
+      ansible.builtin.command: git status --short
+      args:
+        chdir: "{{ playbook_dir }}/../../"
+      register: git_status
+      changed_when: false
+
+    - name: Display Git status
+      ansible.builtin.debug:
+        msg: "Git working directory is clean."
+      when: git_status.stdout == ''
+
+    - name: Display Git status (uncommitted changes)
+      ansible.builtin.debug:
+        msg: "Uncommitted changes:\n{{ git_status.stdout }}"
+      when: git_status.stdout != ''
+
+    - name: Validate directory structure
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "{{ playbook_dir }}/../../terraform"
+        - "{{ playbook_dir }}/../../kubernetes"
+        - "{{ playbook_dir }}/../../argocd"
+        - "{{ playbook_dir }}/../../helm"
+        - "{{ playbook_dir }}/../../docs"
+      register: dir_checks
+
+    - name: Verify directory structure
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+        fail_msg: "Required directory '{{ item.item }}' is missing."
+        success_msg: "Directory structure validated."
+      loop: "{{ dir_checks.results }}"
+      loop_control:
+        label: "{{ item.item }}"

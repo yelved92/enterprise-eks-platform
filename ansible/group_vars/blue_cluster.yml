@@ -1,0 +1,52 @@
+# =============================================================================
+# Blue Cluster Variables
+# =============================================================================
+# Variables specific to the Blue (active) EKS cluster.
+# =============================================================================
+
+---
+cluster_name: "eks-blue-{{ environment }}"
+cluster_color: "blue"
+cluster_role: "active"
+cluster_traffic_weight: 100
+
+# Node group configuration
+node_groups:
+  system:
+    name: "system-ng"
+    instance_types: ["t3.medium", "t3a.medium"]
+    min_size: 2
+    max_size: 5
+    desired_size: 2
+    labels:
+      node-type: "system"
+      cluster-color: "blue"
+    taints: []
+
+  application:
+    name: "app-ng"
+    instance_types: ["t3.large", "t3a.large"]
+    min_size: 2
+    max_size: 20
+    desired_size: 3
+    labels:
+      node-type: "application"
+      cluster-color: "blue"
+    taints: []
+
+# Karpenter configuration
+karpenter:
+  enabled: true
+  node_pools:
+    - name: "default"
+      instance_types: ["t3.medium", "t3.large", "t3a.medium", "t3a.large"]
+      capacity_type: ["on-demand", "spot"]
+      limits:
+        cpu: 100
+        memory: 400Gi
+
+# Addons
+addons:
+  csi_driver: true
+  ebs_csi_driver: true
+  cloudwatch_observability: true

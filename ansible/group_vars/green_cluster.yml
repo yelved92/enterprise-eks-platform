@@ -1,0 +1,52 @@
+# =============================================================================
+# Green Cluster Variables
+# =============================================================================
+# Variables specific to the Green (standby) EKS cluster.
+# =============================================================================
+
+---
+cluster_name: "eks-green-{{ environment }}"
+cluster_color: "green"
+cluster_role: "standby"
+cluster_traffic_weight: 0
+
+# Node group configuration (minimal for standby)
+node_groups:
+  system:
+    name: "system-ng"
+    instance_types: ["t3.medium", "t3a.medium"]
+    min_size: 1
+    max_size: 3
+    desired_size: 1
+    labels:
+      node-type: "system"
+      cluster-color: "green"
+    taints: []
+
+  application:
+    name: "app-ng"
+    instance_types: ["t3.large", "t3a.large"]
+    min_size: 1
+    max_size: 10
+    desired_size: 1
+    labels:
+      node-type: "application"
+      cluster-color: "green"
+    taints: []
+
+# Karpenter configuration (minimal for standby)
+karpenter:
+  enabled: true
+  node_pools:
+    - name: "default"
+      instance_types: ["t3.medium", "t3.large", "t3a.medium", "t3a.large"]
+      capacity_type: ["on-demand", "spot"]
+      limits:
+        cpu: 50
+        memory: 200Gi
+
+# Addons
+addons:
+  csi_driver: true
+  ebs_csi_driver: true
+  cloudwatch_observability: true
