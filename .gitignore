@@ -46,3 +46,6 @@ __pycache__/
 # Misc
 *.log
 tmp/
+# Terraform provider plugins (large binaries)
+**/.terraform/
+**/.terraform.lock.hcl
