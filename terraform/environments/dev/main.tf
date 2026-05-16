@@ -20,7 +20,7 @@ locals {
 # VPC Module
 # ------------------------------------------------------------------------------
 module "vpc" {
-  source = "../modules/vpc"
+  source = "../../modules/vpc"
 
   name                  = var.environment
   cidr_block            = var.vpc_cidr
@@ -35,7 +35,7 @@ module "vpc" {
 # Subnets Module
 # ------------------------------------------------------------------------------
 module "subnets" {
-  source = "../modules/subnets"
+  source = "../../modules/subnets"
 
   name               = var.environment
   vpc_id             = module.vpc.vpc_id
@@ -48,7 +48,7 @@ module "subnets" {
 # Gateways Module
 # ------------------------------------------------------------------------------
 module "gateways" {
-  source = "../modules/gateways"
+  source = "../../modules/gateways"
 
   name                = var.environment
   vpc_id              = module.vpc.vpc_id
@@ -63,7 +63,7 @@ module "gateways" {
 # Routing Module
 # ------------------------------------------------------------------------------
 module "routing" {
-  source = "../modules/routing"
+  source = "../../modules/routing"
 
   name                      = var.environment
   vpc_id                    = module.vpc.vpc_id
@@ -81,7 +81,7 @@ module "routing" {
 # Security Groups Module
 # ------------------------------------------------------------------------------
 module "security_groups" {
-  source = "../modules/security_groups"
+  source = "../../modules/security_groups"
 
   name               = var.environment
   vpc_id             = module.vpc.vpc_id
@@ -94,7 +94,7 @@ module "security_groups" {
 # Network ACLs Module
 # ------------------------------------------------------------------------------
 module "network_acls" {
-  source = "../modules/network_acls"
+  source = "../../modules/network_acls"
 
   name                    = var.environment
   vpc_id                  = module.vpc.vpc_id
@@ -109,7 +109,7 @@ module "network_acls" {
 # KMS Module
 # ------------------------------------------------------------------------------
 module "kms" {
-  source = "../modules/kms"
+  source = "../../modules/kms"
 
   name                   = var.environment
   enable_key_rotation    = true
@@ -122,7 +122,7 @@ module "kms" {
 # IAM Module
 # ------------------------------------------------------------------------------
 module "iam" {
-  source = "../modules/iam"
+  source = "../../modules/iam"
 
   name = var.environment
   tags = var.tags
@@ -136,7 +136,7 @@ module "iam" {
 # VPC Endpoints Module
 # ------------------------------------------------------------------------------
 module "vpc_endpoints" {
-  source = "../modules/vpc_endpoints"
+  source = "../../modules/vpc_endpoints"
 
   name                       = var.environment
   vpc_id                     = module.vpc.vpc_id

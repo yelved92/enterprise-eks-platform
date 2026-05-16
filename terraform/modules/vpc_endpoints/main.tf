@@ -118,7 +118,7 @@ resource "aws_vpc_endpoint" "interface" {
   for_each = { for k, v in local.interface_endpoints : k => v if v.enable }
 
   vpc_id              = var.vpc_id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.${each.value.service}"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.${each.value.service}"
   vpc_endpoint_type   = "Interface"
   subnet_ids          = var.private_app_subnet_ids
   security_group_ids  = var.security_group_id != null ? [var.security_group_id] : []

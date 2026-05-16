@@ -8,7 +8,7 @@
 
 terraform {
   backend "s3" {
-    bucket         = "enterprise-eks-platform-tfstate-CHANGE_ME-us-east-1"
+    bucket         = "enterprise-eks-platform-tfstate-704489329694-us-east-1"
     key            = "dev/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "terraform-state-lock"

@@ -139,7 +139,7 @@ resource "aws_iam_role_policy" "node_additional" {
         Resource = "*"
         Condition = {
           "StringEquals" = {
-            "kms:ViaService" = "ec2.${data.aws_region.current.name}.amazonaws.com"
+            "kms:ViaService" = "ec2.${data.aws_region.current.region}.amazonaws.com"
           }
         }
       },
