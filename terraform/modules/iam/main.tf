@@ -157,44 +157,11 @@ resource "aws_iam_role_policy" "node_additional" {
 }
 
 # ------------------------------------------------------------------------------
-# EBS CSI Driver IAM Role (for IRSA)
+# IRSA Roles (moved to terraform/modules/iam_irsa)
 # ------------------------------------------------------------------------------
-resource "aws_iam_role" "ebs_csi" {
-  count = var.eks_oidc_provider_arn != null ? 1 : 0
-
-  name = "${var.name}-ebs-csi-driver"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRoleWithWebIdentity"
-        Effect = "Allow"
-        Principal = {
-          Federated = var.eks_oidc_provider_arn
-        }
-        Condition = {
-          "StringEquals" = {
-            "${replace(var.eks_oidc_provider_arn, "/^.*oidc-provider//", "")}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
-          }
-        }
-      }
-    ]
-  })
-
-  tags = merge(
-    {
-      Name        = "${var.name}-ebs-csi-driver"
-      Environment = var.name
-      ManagedBy   = "terraform"
-    },
-    var.tags
-  )
-}
-
-resource "aws_iam_role_policy_attachment" "ebs_csi" {
-  count = var.eks_oidc_provider_arn != null ? 1 : 0
-
-  role       = aws_iam_role.ebs_csi[0].name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
-}
+# Roles assumed by Kubernetes ServiceAccounts via OIDC (EBS CSI, VPC CNI,
+# ArgoCD, ExternalDNS, etc.) live in the dedicated `iam_irsa` module. They
+# require the EKS OIDC provider URL, which is only known AFTER the cluster
+# is created — keeping them in a separate module avoids a count-on-unknown
+# error during the FIRST plan/apply.
+# ------------------------------------------------------------------------------

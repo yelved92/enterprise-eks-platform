@@ -7,17 +7,9 @@ variable "name" {
   type        = string
 }
 
-variable "eks_cluster_name" {
-  description = "Name of the EKS cluster for IRSA trust policies"
-  type        = string
-  default     = null
-}
-
-variable "eks_oidc_provider_arn" {
-  description = "ARN of the EKS OIDC provider"
-  type        = string
-  default     = null
-}
+# IRSA-related variables (eks_oidc_provider_arn, eks_oidc_provider_url, etc.)
+# were moved to the dedicated `iam_irsa` module to break the count-on-unknown
+# evaluation problem during the first plan. See modules/iam_irsa/.
 
 variable "tags" {
   description = "Additional tags for all IAM resources"

@@ -119,17 +119,17 @@ module "kms" {
 }
 
 # ------------------------------------------------------------------------------
-# IAM Module
+# IAM Module (base roles: cluster, nodes)
+# ------------------------------------------------------------------------------
+# Creates the EKS cluster IAM role and node instance role. These do NOT depend
+# on the EKS cluster existing, so they are applied first and then consumed by
+# the eks/managed_node_groups modules.
 # ------------------------------------------------------------------------------
 module "iam" {
   source = "../../modules/iam"
 
   name = var.environment
   tags = var.tags
-
-  # EBS CSI role will be wired after EKS cluster + OIDC provider creation
-  eks_cluster_name     = null
-  eks_oidc_provider_arn = null
 }
 
 # ------------------------------------------------------------------------------
@@ -174,6 +174,27 @@ module "eks" {
   public_access_cidrs        = var.public_access_cidrs
   enabled_cluster_log_types  = var.enabled_cluster_log_types
   cluster_log_retention_days = var.cluster_log_retention_days
+
+  tags = var.tags
+}
+
+# ------------------------------------------------------------------------------
+# IAM IRSA Module (OIDC-dependent roles: EBS CSI, VPC CNI, etc.)
+# ------------------------------------------------------------------------------
+# Created AFTER module.eks so the OIDC issuer URL is known at plan time.
+# Splitting this out of module.iam avoids the "count depends on unknown value"
+# error — module.iam_irsa has no count gating on OIDC, it always creates
+# its enabled roles, but it's only added to the graph downstream of module.eks.
+# ------------------------------------------------------------------------------
+module "iam_irsa" {
+  source = "../../modules/iam_irsa"
+
+  name              = var.environment
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = replace(module.eks.oidc_provider_url, "https://", "")
+
+  enable_ebs_csi_role = true
+  enable_vpc_cni_role = true
 
   tags = var.tags
 }

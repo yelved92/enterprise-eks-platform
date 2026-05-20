@@ -22,12 +22,4 @@ output "node_role_name" {
   value       = aws_iam_role.node.name
 }
 
-output "ebs_csi_role_arn" {
-  description = "ARN of the EBS CSI driver IAM role"
-  value       = try(aws_iam_role.ebs_csi[0].arn, null)
-}
-
-output "ebs_csi_role_name" {
-  description = "Name of the EBS CSI driver IAM role"
-  value       = try(aws_iam_role.ebs_csi[0].name, null)
-}
+# EBS CSI / VPC CNI IRSA outputs moved to modules/iam_irsa/outputs.tf.
