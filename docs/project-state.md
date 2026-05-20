@@ -35,10 +35,10 @@
 ## Pending Tasks
 - [ ] **CURRENT PHASE:** Phase 3 - EKS Cluster Deployment
   - [x] Design EKS cluster architecture — ADR-006: Single cluster first, Blue/Green later
-  - [ ] Implement EKS module (cluster + OIDC provider + CloudWatch logging)
-  - [ ] Implement managed node groups module
+  - [x] Implement EKS module (cluster + OIDC provider + CloudWatch logging)
+  - [x] Implement managed node groups module
   - [ ] Wire EKS outputs back to IAM module for EBS CSI IRSA role
-  - [ ] Wire EKS module into dev environment main.tf
+  - [x] Wire EKS module into dev environment main.tf
   - [ ] Deploy dev cluster — terraform apply
   - [ ] Validate cluster access — kubectl, node readiness, pod scheduling
   - [ ] Install EBS CSI driver add-on
@@ -74,5 +74,7 @@
 - No SSH access to nodes (private subnets)
 - VPC Flow Logs disabled by default in dev (cost optimization)
 - Single NAT Gateway for dev to minimize costs (~/month vs ~/month for 3 AZs)
+
+
 
 

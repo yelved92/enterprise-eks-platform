@@ -8,19 +8,13 @@ terraform/**/terraform.tfstate.backup
 *.tfvars
 *.auto.tfvars
 crash.log
+**/tfplan
+**/*.tfplan
+**/plan-*
 
 # Kubernetes
 **/kubeconfig*
 *.kubeconfig
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-Thumbs.db
 
 # Secrets
 *.pem
@@ -46,6 +40,8 @@ __pycache__/
 # Misc
 *.log
 tmp/
+
 # Terraform provider plugins (large binaries)
 **/.terraform/
-**/.terraform.lock.hcl
+**/.terraform.lock.hcl"
+

@@ -170,7 +170,7 @@
 
 ---
 
-## 2026-05-13 — Session 4: Phase 3 Design — EKS Cluster Architecture
+## 2026-05-13 ï¿½ Session 4: Phase 3 Design ï¿½ EKS Cluster Architecture
 
 ### Summary
 - Documented ADR-006: Single EKS cluster first, Blue/Green cluster architecture deferred until applications are stable
@@ -194,10 +194,10 @@
 
 ### Lessons Learned
 - Deploying a single cluster first reduces cost and complexity during development
-- ADR-005 (Blue/Green) is not abandoned — ADR-006 defines a phased approach to achieve it
+- ADR-005 (Blue/Green) is not abandoned ï¿½ ADR-006 defines a phased approach to achieve it
 - Clear documentation of the migration path prevents architectural dead ends
 
-## Next Session Target: Phase 3 — EKS Module Implementation
+## Next Session Target: Phase 3 ï¿½ EKS Module Implementation
 
 ### Planned Work
 - Create terraform/modules/eks/ directory with main.tf, variables.tf, outputs.tf
@@ -210,3 +210,49 @@
 - Apply and deploy dev cluster
 - Validate cluster access with kubectl
 
+## 2026-05-13 - Session 5: Phase 3 Implementation - EKS Modules Wired & Plan Validated
+
+### Summary
+- Added EKS cluster variables to dev environment (cluster_version, log types, endpoint config, etc.)
+- Added managed node group variables to dev environment (instance types, scaling, disk size, spot config)
+- Wired EKS module into dev environment main.tf - cluster, OIDC provider, CloudWatch logs, 3 add-ons
+- Wired managed node groups module into dev environment main.tf - KMS encrypted EBS, private subnets, t3.medium
+- Added full EKS outputs (cluster ID, ARN, endpoint, OIDC provider ARN/URL, node group details)
+- Updated .gitignore to exclude tfplan files from version control
+- Updated progress-log.md, project-state.md, and todo.md
+
+### Validation
+- terraform init - Succeeded, all modules and providers loaded
+- terraform plan - Clean: 8 to add, 2 to change (security group egress cosmetic), 0 to destroy
+- Plan confirmed: EKS cluster (1.30, private endpoint, KMS encrypted), OIDC provider, node group (3x t3.medium)
+- All outputs will be available after apply for EBS CSI IRSA wiring step
+
+### Issues Encountered
+- EKS module and managed_node_groups module pre-existing but not wired - completed wiring
+- variables.tf had duplicate content from failed edit - cleaned and verified
+- main.tf truncation during edit - recovered via find-and-replace
+
+### Fixes Applied
+- Replaced truncated main.tf with complete configuration via single_find_and_replace
+- Rewrote variables.tf without duplicates
+- Added **/tfplan and **/*.tfplan patterns to .gitignore
+
+### Lessons Learned
+- Always verify file contents after large edits - truncation can occur
+- Use terraform plan before apply to catch configuration errors
+- tfplan files are binary artifacts and must never be committed
+- EKS module wiring has a dependency chain: network first, then cluster, then node groups
+- Next step is applying the plan and then wiring the EBS CSI IRSA role
+
+## Next Session Target: Phase 3 Apply & EBS CSI IRSA
+
+### Planned Work
+- Run terraform apply to deploy dev EKS cluster and node groups
+- Wait for cluster creation (~8-12 mins) and node group provisioning (~3 mins)
+- Retrieve OIDC provider ARN from outputs
+- Wire EKS outputs back to IAM module for EBS CSI IRSA trust relationship
+- Re-run terraform apply for EBS CSI role creation
+- Validate cluster access with aws eks update-kubeconfig and kubectl get nodes
+- Install EBS CSI driver add-on
+- Validate node readiness, pod scheduling, and VPC endpoint connectivity
+- Update documentation

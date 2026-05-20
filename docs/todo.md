@@ -42,16 +42,16 @@
 - [x] Documentation update
 
 ### Phase 3: EKS Cluster Deployment (In Progress)
-- [x] Design EKS cluster architecture — ADR-006 (Single cluster first, Blue/Green later)
-- [ ] Implement EKS module (cluster + OIDC provider + CloudWatch logging)
-- [ ] Implement managed node groups module (t3.medium, on-demand, KMS encrypted)
+- [x] Design EKS cluster architecture ï¿½ ADR-006 (Single cluster first, Blue/Green later)
+- [x] Implement EKS module (cluster + OIDC provider + CloudWatch logging)
+- [x] Implement managed node groups module (t3.medium, on-demand, KMS encrypted)
 - [ ] Wire EKS outputs back to IAM module for EBS CSI IRSA trust relationship
-- [ ] Wire EKS module into dev environment main.tf
-- [ ] Deploy dev cluster — terraform plan + apply
-- [ ] Validate cluster access — kubectl, node readiness, pod scheduling, VPC endpoint connectivity
+- [x] Wire EKS module into dev environment main.tf
+- [ ] Deploy dev cluster ï¿½ terraform plan + apply
+- [ ] Validate cluster access ï¿½ kubectl, node readiness, pod scheduling, VPC endpoint connectivity
 - [ ] Install EBS CSI driver add-on
-- [ ] Implement Karpenter module (deferred — after GitOps is stable)
-- [ ] Documentation update — Phase 3 complete
+- [ ] Implement Karpenter module (deferred ï¿½ after GitOps is stable)
+- [ ] Documentation update ï¿½ Phase 3 complete
 
 ### Phase 4: GitOps with ArgoCD
 - [ ] Design ArgoCD architecture (app-of-apps)
@@ -168,3 +168,4 @@
 - Service catalog for developer self-service
 - Internal developer platform (IDP)
 - Backstage integration
+

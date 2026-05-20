@@ -157,7 +157,56 @@ module "vpc_endpoints" {
 }
 
 # ------------------------------------------------------------------------------
-# Outputs (convenience)
+# EKS Cluster Module
+# ------------------------------------------------------------------------------
+module "eks" {
+  source = "../../modules/eks"
+
+  cluster_name            = var.environment
+  cluster_version         = var.cluster_version
+  cluster_role_arn        = module.iam.cluster_role_arn
+  subnet_ids              = module.subnets.private_app_subnet_ids
+  security_group_ids      = [module.security_groups.cluster_security_group_id]
+  kms_key_arn             = module.kms.kms_key_arn
+
+  endpoint_private_access    = var.endpoint_private_access
+  endpoint_public_access     = var.endpoint_public_access
+  public_access_cidrs        = var.public_access_cidrs
+  enabled_cluster_log_types  = var.enabled_cluster_log_types
+  cluster_log_retention_days = var.cluster_log_retention_days
+
+  tags = var.tags
+}
+
+# ------------------------------------------------------------------------------
+# Managed Node Groups Module
+# ------------------------------------------------------------------------------
+module "node_group" {
+  source = "../../modules/managed_node_groups"
+
+  cluster_name            = module.eks.cluster_name
+  node_group_name         = var.node_group_name
+  node_role_arn           = module.iam.node_role_arn
+  subnet_ids              = module.subnets.private_app_subnet_ids
+
+  instance_types = var.node_group_instance_types
+  disk_size      = var.node_group_disk_size
+
+  kms_key_arn = module.kms.ebs_kms_key_arn
+
+  scaling_desired_size = var.node_group_scaling_desired
+  scaling_max_size     = var.node_group_scaling_max
+  scaling_min_size     = var.node_group_scaling_min
+
+  use_spot = var.use_spot_instances
+
+  cluster_depends_on = [module.eks.cluster_id]
+
+  tags = var.tags
+}
+
+# ------------------------------------------------------------------------------
+# Outputs
 # ------------------------------------------------------------------------------
 output "vpc_id" {
   description = "The ID of the VPC"
@@ -198,3 +247,49 @@ output "ebs_kms_key_arn" {
   description = "ARN of the EBS KMS key"
   value       = module.kms.ebs_kms_key_arn
 }
+
+output "eks_cluster_id" {
+  description = "The ID of the EKS cluster"
+  value       = module.eks.cluster_id
+}
+
+output "eks_cluster_name" {
+  description = "The name of the EKS cluster"
+  value       = module.eks.cluster_name
+}
+
+output "eks_cluster_arn" {
+  description = "The ARN of the EKS cluster"
+  value       = module.eks.cluster_arn
+}
+
+output "eks_cluster_endpoint" {
+  description = "The API server endpoint URL"
+  value       = module.eks.cluster_endpoint
+}
+
+output "eks_cluster_version" {
+  description = "The Kubernetes version of the cluster"
+  value       = module.eks.cluster_version
+}
+
+output "eks_oidc_provider_arn" {
+  description = "ARN of the OIDC provider for IRSA"
+  value       = module.eks.oidc_provider_arn
+}
+
+output "eks_oidc_provider_url" {
+  description = "URL of the OIDC provider"
+  value       = module.eks.oidc_provider_url
+}
+
+output "eks_node_group_id" {
+  description = "The ID of the managed node group"
+  value       = module.node_group.node_group_id
+}
+
+output "eks_node_group_name" {
+  description = "The name of the managed node group"
+  value       = module.node_group.node_group_name
+}
+
