@@ -23,37 +23,35 @@
 - [x] Add upgradeability strategy documentation
 - [x] Add immutable infrastructure documentation
 
-### Phase 2: Terraform Base Networking
-- [ ] Design VPC architecture (multi-AZ, public/private subnets)
-- [ ] Create Terraform root module structure
-- [ ] Implement VPC module
-- [ ] Implement subnet module
-- [ ] Implement Internet Gateway module
-- [ ] Implement NAT Gateway module
-- [ ] Implement route tables module
-- [ ] Implement security groups module
-- [ ] Implement Network ACLs module
-- [ ] Implement VPC endpoints module
-- [ ] Implement KMS module
-- [ ] Implement IAM base module
-- [ ] Create dev environment configuration
-- [ ] Create prod environment configuration
-- [ ] Terraform validation and plan
-- [ ] Documentation update
+### Phase 2: Terraform Base Networking (Complete âœ…)
+- [x] Design VPC architecture (multi-AZ, public/private subnets)
+- [x] Create Terraform root module structure
+- [x] Implement VPC module
+- [x] Implement subnet module
+- [x] Implement Internet Gateway module
+- [x] Implement NAT Gateway module
+- [x] Implement route tables module
+- [x] Implement security groups module
+- [x] Implement Network ACLs module
+- [x] Implement VPC endpoints module
+- [x] Implement KMS module
+- [x] Implement IAM base module
+- [x] Create dev environment configuration
+- [x] Create prod environment configuration
+- [x] Terraform validation and plan
+- [x] Documentation update
 
-### Phase 3: EKS Cluster Deployment
-- [ ] Design EKS cluster architecture (Blue/Green)
-- [ ] Implement EKS module
-- [ ] Implement managed node groups module
-- [ ] Implement Karpenter module
-- [ ] Implement OIDC provider module
-- [ ] Implement IRSA module
-- [ ] Implement EBS CSI driver module
-- [ ] Configure CloudWatch integration
-- [ ] Deploy Blue cluster (dev)
-- [ ] Validate cluster access
-- [ ] Deploy Green cluster (dev)
-- [ ] Documentation update
+### Phase 3: EKS Cluster Deployment (In Progress)
+- [x] Design EKS cluster architecture — ADR-006 (Single cluster first, Blue/Green later)
+- [ ] Implement EKS module (cluster + OIDC provider + CloudWatch logging)
+- [ ] Implement managed node groups module (t3.medium, on-demand, KMS encrypted)
+- [ ] Wire EKS outputs back to IAM module for EBS CSI IRSA trust relationship
+- [ ] Wire EKS module into dev environment main.tf
+- [ ] Deploy dev cluster — terraform plan + apply
+- [ ] Validate cluster access — kubectl, node readiness, pod scheduling, VPC endpoint connectivity
+- [ ] Install EBS CSI driver add-on
+- [ ] Implement Karpenter module (deferred — after GitOps is stable)
+- [ ] Documentation update — Phase 3 complete
 
 ### Phase 4: GitOps with ArgoCD
 - [ ] Design ArgoCD architecture (app-of-apps)

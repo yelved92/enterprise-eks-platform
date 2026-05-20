@@ -206,3 +206,118 @@ Route53 with weighted/failover routing policies will manage traffic switching du
 - Green cluster should have identical security posture
 - Data replication between clusters must be encrypted
 - IAM roles must be duplicated across clusters
+---
+
+## ADR-006: Single EKS Cluster First — Phased Introduction of Blue/Green
+
+**Status:** Accepted
+
+**Context:**
+ADR-005 established Blue/Green cluster architecture as the target state. However, deploying two clusters before any applications are running adds unnecessary complexity, doubles infrastructure cost during development, and complicates initial debugging. The team needs a working cluster to validate networking, IAM, ingress, GitOps, and application deployment before implementing cluster-level redundancy.
+
+**Decision:**
+Deploy a **single EKS cluster** named `dev` for the initial development phase. Blue/Green cluster separation will be introduced later once:
+- Applications are deployed and stable
+- GitOps workflows are validated
+- Upgrade procedures are understood
+- Cost implications for a second cluster are justified
+
+This follows a **progressive enhancement** pattern common in enterprise platforms where redundancy is added after functional stability.
+
+### Cluster Design Specifications
+
+| Attribute | Decision | Rationale |
+|-----------|----------|-----------|
+| **Cluster name** | `dev` | Single cluster, environment-scoped |
+| **Endpoint access** | Private | Nodes in private subnets; no public endpoint; accessed via VPC endpoints or VPN |
+| **Kubernetes version** | 1.30 (latest supported by AWS provider) | Balance of features and stability |
+| **Control plane logging** | All types enabled (api, audit, authenticator, controllerManager, scheduler) | Essential for debugging and security auditing |
+| **Secrets encryption** | KMS (EBS key from KMS module) | Encrypt etcd at rest |
+| **Cluster IP family** | IPv4 | Simplest; IPv6 adds complexity without immediate benefit |
+| **Node placement** | Private app subnets (3 AZs) | No public IPs on nodes; access via VPC endpoints |
+| **Node group type** | Managed node groups (initial), Karpenter (later) | Managed groups for simplicity; Karpenter for flexibility |
+| **Node sizing (dev)** | t3.medium (x3, min 2, max 6) | Cost-optimized for development; sufficient for initial workloads |
+| **Node purchasing** | On-Demand (dev) | Spot for cost optimization added in later phases |
+| **EBS encryption** | KMS (EBS key) | Encryption at rest for all volumes |
+| **Add-ons** | CoreDNS, kube-proxy, vpc-cni, EBS CSI driver | Essential cluster services |
+| **OIDC provider** | Created per cluster | Required for IRSA |
+
+### Module Design
+
+Create a single parameterized `eks` module that accepts:
+- `cluster_name`, `cluster_version`, `vpc_id`, `subnet_ids`, `security_group_ids`
+- `cluster_role_arn`, `node_role_arn`, `kms_key_arn`
+- `endpoint_private_access`, `endpoint_public_access`
+- `enabled_cluster_log_types`
+
+The module will output:
+- `cluster_id`, `cluster_arn`, `cluster_endpoint`
+- `cluster_certificate_authority`
+- `oidc_provider_arn`, `oidc_provider_url`
+- `node_security_group_id`
+- `cluster_primary_security_group_id`
+
+### Managed Node Groups Module Design
+
+Separate module to avoid bloating the EKS module:
+- `cluster_name`, `node_role_arn`, `subnet_ids`
+- `node_group_name`, `instance_types`, `scaling_config`
+- `disk_size`, `kms_key_arn`, `labels`, `tags`
+
+### IAM Module Extension
+
+The existing IAM module already has conditional resources for the EBS CSI driver role. Once the EKS module creates the OIDC provider, the IAM module needs to be re-invoked with:
+- `eks_oidc_provider_arn` — from EKS module output
+- `eks_cluster_name` — from EKS module output
+
+### Deployment Order
+
+```
+Step 1: Create EKS module     → terraform apply (cluster + OIDC)
+Step 2: Create node groups     → terraform apply (nodes join cluster)
+Step 3: Update IAM module      → terraform apply (EBS CSI IRSA role)
+Step 4: Configure kubectl      → aws eks update-kubeconfig
+Step 5: Validate cluster       → kubectl get nodes, pods
+Step 6: Install EBS CSI driver → Helm chart (or Terraform)
+Step 7: Deploy ArgoCD          → Phase 4
+```
+
+**Alternatives Considered:**
+- Immediate Blue/Green deployment — rejected; doubles cost during development, adds debugging complexity, premature optimization
+- Public endpoint access — rejected; security best practice is private clusters; access via VPC/SSM/bastion
+- Spot instances for dev — rejected; Spot interruption causes instability during development; reserved for later optimization
+- Single combined EKS+node module — rejected; separation allows independent lifecycle management (e.g., replacing node groups without touching cluster)
+
+**Pros:**
+- Faster time to working cluster
+- Lower initial AWS cost (~$75/month vs ~$150/month for two clusters)
+- Simpler debugging during early phases
+- Follows progressive enhancement pattern
+
+**Cons:**
+- Cluster upgrades will require application downtime until Blue/Green is implemented
+- No cluster-level DR until second cluster is deployed
+- Need to refactor Route53 and application deployment later when splitting clusters
+
+**Operational Impact:**
+- Single kubeconfig for development
+- Simplified node group management
+- Easier integration testing for application teams
+- Migration to Blue/Green later requires: new cluster deployment, data sync, traffic switch testing
+
+**Security Implications:**
+- Private cluster endpoint prevents public API exposure
+- All traffic flows through VPC endpoints
+- KMS encryption protects etcd and EBS volumes
+- IRSA enables workload-level IAM isolation from day one
+- Single cluster means all workloads share the same control plane — namespace isolation and network policies mitigate this risk
+
+**Future Migration Path to Blue/Green:**
+1. Deploy green cluster using same module with `cluster_name = "green"`
+2. Create Route53 records for weighted routing
+3. Replicate applications via ArgoCD
+4. Test traffic shifting
+5. Switch production traffic
+6. Decommission old cluster or keep as standby
+
+This design ensures the single cluster is a stepping stone, not a dead end.
