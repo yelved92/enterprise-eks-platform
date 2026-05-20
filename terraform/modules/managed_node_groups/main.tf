@@ -6,9 +6,6 @@
 # with easy production scaling.
 # -----------------------------------------------------------------------------
 
-data "aws_partition" "current" {}
-data "aws_caller_identity" "current" {}
-
 # ------------------------------------------------------------------------------
 # Managed Node Group - Primary (On-Demand)
 # ------------------------------------------------------------------------------
@@ -20,8 +17,11 @@ resource "aws_eks_node_group" "this" {
   subnet_ids = var.subnet_ids
 
   instance_types = var.instance_types
+  capacity_type  = var.use_spot ? "SPOT" : "ON_DEMAND"
 
-  disk_size = var.disk_size
+  # disk_size is intentionally omitted: when launch_template is used, EBS
+  # configuration (size, type, IOPS, KMS) comes from the launch template.
+  # Setting both raises a conflict warning from the EKS API.
 
   scaling_config {
     desired_size = var.scaling_desired_size
@@ -40,11 +40,12 @@ resource "aws_eks_node_group" "this" {
     max_unavailable_percentage = var.max_unavailable_percentage
   }
 
+  # NOTE: well-known labels like topology.kubernetes.io/zone are reserved and
+  # set automatically by the kubelet. We only set non-reserved labels here.
   labels = merge(
     {
-      "node.kubernetes.io/role"         = "worker"
-      "node.kubernetes.io/lifecycle"    = var.use_spot ? "spot" : "on-demand"
-      "topology.kubernetes.io/zone"     = "multi-az"
+      "node.kubernetes.io/role"      = "worker"
+      "node.kubernetes.io/lifecycle" = var.use_spot ? "spot" : "on-demand"
     },
     var.labels
   )

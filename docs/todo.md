@@ -42,16 +42,27 @@
 - [x] Documentation update
 
 ### Phase 3: EKS Cluster Deployment (In Progress)
-- [x] Design EKS cluster architecture � ADR-006 (Single cluster first, Blue/Green later)
+- [x] Design EKS cluster architecture — ADR-006 (Single cluster first, Blue/Green later)
 - [x] Implement EKS module (cluster + OIDC provider + CloudWatch logging)
 - [x] Implement managed node groups module (t3.medium, on-demand, KMS encrypted)
-- [ ] Wire EKS outputs back to IAM module for EBS CSI IRSA trust relationship
 - [x] Wire EKS module into dev environment main.tf
-- [ ] Deploy dev cluster � terraform plan + apply
-- [ ] Validate cluster access � kubectl, node readiness, pod scheduling, VPC endpoint connectivity
-- [ ] Install EBS CSI driver add-on
-- [ ] Implement Karpenter module (deferred � after GitOps is stable)
-- [ ] Documentation update � Phase 3 complete
+- [x] **Phase 3.5 Refactor pass** — see ADR-007 (split IAM/IRSA) & ADR-008 (version pinning)
+  - [x] Create `terraform/modules/iam_irsa/` module (EBS CSI + VPC CNI IRSA roles)
+  - [x] Fix broken `replace()` regex in EBS CSI trust policy
+  - [x] Add `:aud` condition to IRSA trust policies
+  - [x] Add `capacity_type` to node group (was missing — spot was a no-op)
+  - [x] Remove reserved label `topology.kubernetes.io/zone`
+  - [x] Remove conflicting `disk_size` from `aws_eks_node_group` (launch template owns it)
+  - [x] Add `versions.tf` to env root + all 11 modules
+  - [x] Remove unused `aws_partition` / `aws_caller_identity` data sources
+- [x] Destroy original 104 resources (clean slate for refactored design)
+- [ ] **NEXT:** `terraform apply` clean recreation (~120 resources)
+- [ ] Validate cluster access — `aws eks update-kubeconfig` + `kubectl get nodes`
+- [ ] Verify IRSA wiring (`kubectl describe sa -n kube-system` shows role ARN)
+- [ ] Install EBS CSI driver add-on (`aws_eks_addon` with IRSA `service_account_role_arn`)
+- [ ] Validate private endpoint posture (no public access; VPC endpoint traffic)
+- [ ] Implement Karpenter module (deferred — after GitOps is stable)
+- [ ] Documentation update — Phase 3 complete
 
 ### Phase 4: GitOps with ArgoCD
 - [ ] Design ArgoCD architecture (app-of-apps)
@@ -160,7 +171,26 @@
 - None currently
 
 ## Technical Debt
-- None currently
+*Tracked from code review on 2026-05-20. Items not addressed in the Phase 3.5 refactor are queued here for later phases where they become natural fits.*
+
+### High value, deferred to natural integration points
+- **No bastion / VPN for private EKS endpoint** — currently no way to reach `kubectl` from a workstation. Add an SSM-only EC2 bastion module (no SSH, no key pair, IMDSv2 required) or AWS Client VPN. Decide before Phase 4 (GitOps) since ArgoCD setup needs API access.
+- **Cluster SG attached to EKS instead of node SG** — the `vpc_config.security_group_ids` should reference the node SG, not the (mostly empty) cluster SG. Plan to address during Blue/Green refactor where SG wiring will be re-thought.
+- **VPC endpoints sharing cluster SG** — should have a dedicated `vpc-endpoints` SG that ingresses 443 from the node SG. Same window as above.
+- **Add modern `access_config` block on `aws_eks_cluster`** — prefer `authentication_mode = "API"` + `aws_eks_access_entry` over the legacy `aws-auth` ConfigMap. Add `bootstrap_self_managed_addons = false`. Apply during a planned cluster recreation, not in-place.
+- **Pin EKS add-on versions** — currently `null` (latest). Set explicit defaults per cluster version (e.g., for 1.30: `coredns v1.11.3-eksbuild.1`, `kube-proxy v1.30.3-eksbuild.5`, `vpc-cni v1.18.3-eksbuild.2`); use `data "aws_eks_addon_version"` for resolution.
+- **Strip EBS/EC2 volume permissions from node IAM role** — these duplicated the EBS CSI role's permissions. Remove after EBS CSI IRSA is validated to be working in cluster.
+- **`prod` environment directory missing** — todo.md previously claimed it was done. Either create stub `terraform/environments/prod/` or correct the doc (already corrected in project-state.md).
+
+### Cost / FinOps
+- **All 7 VPC interface endpoints enabled in dev** (~$0.01/hr * 6 * 24 * 30 ≈ $43/mo) — inconsistent with cost-optimized intent. Add per-endpoint flag in `tfvars` and document the cost/security tradeoff.
+
+### Hygiene
+- **`Environment = var.cluster_name` misnomer** in all module tags — will break cost-allocation reports once Blue/Green clusters exist (`dev-blue` vs `dev-green` both tagged as Environment). Refactor to accept an `environment` variable separately from `cluster_name`.
+- **Duplicate tagging**: `default_tags` in provider + per-module `merge()` tagging adds noise. Pick one strategy.
+- **`ignore_changes = [scaling_config[0].desired_size]`** is correct for an autoscaler-managed cluster but premature (no Karpenter/CA yet). Gate behind a variable.
+- **Encoding artifacts in `progress-log.md`** — `�` characters from a Windows cp1252 source. Re-save as UTF-8 (partially fixed during Session 6).
+- **No `tflint` / `tfsec` / `checkov` config files** — CI workflows exist but configs don't, so noise drowns signal. Add `.tflint.hcl`, `.tfsec/`, `.checkov.yaml` baselines.
 
 ## Future Improvements
 - Multi-region deployment

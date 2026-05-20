@@ -321,3 +321,123 @@ Step 7: Deploy ArgoCD          → Phase 4
 6. Decommission old cluster or keep as standby
 
 This design ensures the single cluster is a stepping stone, not a dead end.
+
+---
+
+## ADR-007: Split IAM Module into `iam` (Base) and `iam_irsa` (OIDC-Dependent)
+
+**Status:** Accepted
+
+**Context:**
+During Phase 3 implementation, attempting to create the EBS CSI driver IRSA role inside the base `iam` module produced a Terraform error:
+
+```
+Error: Invalid count argument
+  The "count" value depends on resource attributes that cannot be determined
+  until apply, so Terraform cannot predict how many instances will be created.
+```
+
+Root cause: the IRSA role's `count` was gated on `module.eks.oidc_provider_arn != null`, but that output is `(known after apply)` on the first plan. Terraform refuses to plan when `count` itself depends on an unknown value.
+
+Additionally, code review uncovered three serious bugs in the original IRSA implementation:
+
+1. **Broken regex in `replace()`** — used `"/^.*oidc-provider//"` to derive the issuer URL from the provider ARN. The trailing `/` was part of the regex pattern, not a delimiter; the value extracted from the ARN was *not* the issuer URL that IRSA actually validates against. This would have silently mis-authorized token exchanges.
+2. **Missing `:aud` condition** — only checked `:sub`, leaving the trust policy broader than least-privilege requires. Any ServiceAccount in any cluster federated to this provider could potentially assume the role.
+3. **Wrong identifier in trust policy** — IRSA requires the OIDC **issuer URL** (without `https://`) as the StringEquals key, not a substring of the provider ARN.
+
+**Decision:**
+Split IAM into two modules with clear responsibilities:
+
+| Module | Purpose | Depends on EKS? |
+|---|---|---|
+| `terraform/modules/iam` | Base IAM roles consumed BY EKS: cluster role, node instance role, attached AWS-managed policies | No — created first |
+| `terraform/modules/iam_irsa` | OIDC-dependent IRSA roles: EBS CSI, VPC CNI, and future roles (ArgoCD, ExternalDNS, External Secrets, Karpenter, Velero, Falco, etc.) | Yes — created after EKS |
+
+`iam_irsa` accepts `oidc_provider_arn` and `oidc_provider_url` as **required** variables with validation. Per-role creation is gated by simple boolean enable flags (`enable_ebs_csi_role`, `enable_vpc_cni_role`) — booleans are static inputs, not unknown values, so `count` evaluates at plan time.
+
+The trust policies were rewritten to use the issuer URL directly and to enforce both `:sub` and `:aud` conditions:
+
+```hcl
+Condition = {
+  StringEquals = {
+    "${var.oidc_provider_url}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+    "${var.oidc_provider_url}:aud" = "sts.amazonaws.com"
+  }
+}
+```
+
+**Alternatives Considered:**
+- **Single IAM module, two-stage apply via `-target`** — works but breaks `terraform apply` as an idempotent single command, and `-target` is officially discouraged by HashiCorp for routine workflows.
+- **Hardcode the issuer URL format** — fragile; AWS does not contractually guarantee the OIDC issuer URL format.
+- **Generate the IRSA role inside the `eks` module** — bloats the EKS module and violates single-responsibility; the EKS module is also reused for Blue/Green where each cluster has its own OIDC provider.
+- **Use a `null_resource` with a `local-exec` to fetch OIDC URL** — adds an external dependency and breaks `terraform plan` reproducibility on machines without AWS CLI.
+
+**Pros:**
+- Eliminates the count-on-unknown error: single `terraform apply` succeeds.
+- Cleanly extensible: every future controller that needs IRSA (ArgoCD, External Secrets, Karpenter, etc.) becomes a flag + small block in `iam_irsa`, not a new module.
+- Trust policies are now correct and follow AWS IRSA documentation exactly.
+- Defense-in-depth: the `:aud` enforcement means a stolen OIDC token from another cluster cannot assume this role.
+- Aligns with reference architectures (AWS EKS Blueprints, terraform-aws-modules/iam) which separate base IAM from IRSA.
+
+**Cons:**
+- Two modules to maintain instead of one.
+- Slightly more wiring in the environment root (`dev/main.tf` calls both modules).
+
+**Operational Impact:**
+- A `terraform destroy` deletes both modules in correct reverse order automatically.
+- Adding a new IRSA role is a localized change — touches only `iam_irsa` and the environment root, never the cluster module.
+- For Blue/Green, each cluster will have its own `iam_irsa` instance keyed by cluster name, keeping role names unique (`blue-ebs-csi-driver`, `green-ebs-csi-driver`).
+
+**Security Implications:**
+- Fixes the silent IRSA trust-policy bug before any compromised pod could exploit it.
+- Enforces the `:aud` condition that AWS recommends as mandatory.
+- Trust policies are now reviewable and grep-able by ServiceAccount path.
+- The node IAM role's overly-broad `ec2:*Volume*` permissions (originally added as a workaround) can now be safely removed in a follow-up PR since EBS CSI uses IRSA.
+
+---
+
+## ADR-008: Terraform & Provider Version Pinning
+
+**Status:** Accepted
+
+**Context:**
+The project previously had **no `required_providers` or `required_version` blocks anywhere**. `terraform init` resolved whatever happened to be the latest compatible provider at the time. This violates the prompt's explicit reproducibility and version-pinning requirements, and creates risk that CI runners pull a different provider version than developer workstations.
+
+**Decision:**
+Add `versions.tf` files at two layers:
+
+1. **Environment root** (`terraform/environments/dev/versions.tf`) — pins the **upper bound** of Terraform CLI and providers, locking the major version. Combined with `.terraform.lock.hcl` (already committed), this guarantees identical providers across machines.
+2. **Each module** (`terraform/modules/*/versions.tf`) — declares which providers the module **uses**, with a permissive constraint (`>= 5.0, < 7.0` for AWS). This makes modules portable: another root configuration consuming the module can pick its own AWS provider version within the supported range.
+
+Current pinned versions:
+
+| Component | Constraint | Resolved (lockfile) |
+|---|---|---|
+| Terraform CLI | `>= 1.6.0, < 2.0.0` | 1.15.2 |
+| `hashicorp/aws` | `~> 6.0` (env) / `>= 5.0, < 7.0` (modules) | 6.45.0 |
+| `hashicorp/random` | `~> 3.6` | 3.9.0 |
+| `hashicorp/tls` | `~> 4.0` | 4.3.0 |
+
+**Alternatives Considered:**
+- **Exact pins (`= 6.45.0`)** — too rigid; blocks patch updates and CVE fixes.
+- **Unconstrained (`>= 5.0`)** — defeats the purpose; CI could pull a breaking major version.
+- **Constraints only in lockfile** — lockfile alone doesn't communicate intent; humans reviewing the code can't tell which majors are supported.
+
+**Pros:**
+- Reproducible `terraform init` across all environments and CI runners.
+- Clear documentation of which provider majors the code targets.
+- Module-level constraints enable safe reuse.
+- Lockfile + constraints together prevent both drift (lockfile) and surprise major upgrades (constraints).
+
+**Cons:**
+- Periodic maintenance: when upgrading providers, both the constraint and lockfile must be updated.
+
+**Operational Impact:**
+- CI workflows can fail fast if the wrong Terraform CLI version is used.
+- Module consumers see explicit version requirements and can plan upgrades.
+- Provider upgrades become a deliberate PR with `terraform init -upgrade`.
+
+**Security Implications:**
+- Locks providers against supply-chain substitution (combined with the lockfile's `h1:` content hashes).
+- Prevents accidental adoption of unreleased/RC provider versions.
+

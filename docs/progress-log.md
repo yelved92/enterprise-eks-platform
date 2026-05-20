@@ -170,14 +170,14 @@
 
 ---
 
-## 2026-05-13 � Session 4: Phase 3 Design � EKS Cluster Architecture
+## 2026-05-13 — Session 4: Phase 3 Design — EKS Cluster Architecture
 
 ### Summary
 - Documented ADR-006: Single EKS cluster first, Blue/Green cluster architecture deferred until applications are stable
 - Designed EKS module architecture (cluster + OIDC provider + CloudWatch logging in a single module)
 - Designed managed node groups module (separate for independent lifecycle)
 - Defined dev cluster specifications: t3.medium, private endpoint, KMS encryption, no public access
-- Planned phased deployment order: EKS module ? node groups ? IAM IRSA wiring ? validation ? EBS CSI
+- Planned phased deployment order: EKS module → node groups → IAM IRSA wiring → validation → EBS CSI
 - Documented future migration path from single cluster to Blue/Green
 - Updated todo.md with refined Phase 3 tasks reflecting single-cluster-first strategy
 - Updated project-state.md pending tasks list
@@ -194,10 +194,10 @@
 
 ### Lessons Learned
 - Deploying a single cluster first reduces cost and complexity during development
-- ADR-005 (Blue/Green) is not abandoned � ADR-006 defines a phased approach to achieve it
+- ADR-005 (Blue/Green) is not abandoned — ADR-006 defines a phased approach to achieve it
 - Clear documentation of the migration path prevents architectural dead ends
 
-## Next Session Target: Phase 3 � EKS Module Implementation
+## Next Session Target: Phase 3 — EKS Module Implementation
 
 ### Planned Work
 - Create terraform/modules/eks/ directory with main.tf, variables.tf, outputs.tf
@@ -256,3 +256,93 @@
 - Install EBS CSI driver add-on
 - Validate node readiness, pod scheduling, and VPC endpoint connectivity
 - Update documentation
+
+---
+
+## 2026-05-20 — Session 6: Code Review, Phase 3.5 Refactor, Clean Destroy
+
+### Summary
+This session was driven by a request to review previous LLM-generated work before proceeding. The review surfaced 24 issues across the Phase 2 and Phase 3 modules ranging from a silently broken IRSA trust policy to missing version pinning. Because the EKS cluster had **not** yet been applied to AWS, we treated the refactor as a free improvement and rebuilt the design correctly before any cluster resources were ever created.
+
+### Code Review Findings (highlights)
+- **🔴 Blocking**: Broken `replace()` regex in EBS CSI IRSA trust policy (`"/^.*oidc-provider//"` is malformed); missing `:aud` condition; cluster SG attached to EKS instead of node SG; VPC endpoints SG shared with cluster SG; `topology.kubernetes.io/zone` reserved label overridden; `use_spot` variable wired to a label but not to `capacity_type` (nodes would always be on-demand); private endpoint enabled with no bastion/VPN path to reach `kubectl`.
+- **🟠 Important**: No `versions.tf` / `required_providers` anywhere; EKS add-on versions unpinned (`null`); VPC CNI add-on without IRSA service account role; node IAM role with overly-broad `ec2:*Volume*` permissions that should live on EBS CSI IRSA role; `Environment = var.cluster_name` misnomer.
+- **🟡 Minor**: Unused `aws_partition` / `aws_caller_identity` data sources; premature `ignore_changes = [scaling_config[0].desired_size]` with no autoscaler present; `prod` env claimed done in `todo.md` but no directory exists; UTF-8 encoding artifacts in progress-log.md.
+
+Full review delivered to user in-session; only a subset was acted on this round (Option A: fix high-value items now while the cluster doesn't exist yet).
+
+### Refactor Work Applied
+
+**Version pinning (ADR-008)** — created `versions.tf` in:
+- `terraform/environments/dev/` (Terraform CLI `>= 1.6.0, < 2.0.0`; AWS `~> 6.0`; random `~> 3.6`; tls `~> 4.0`)
+- All 11 modules (`vpc`, `subnets`, `gateways`, `routing`, `security_groups`, `network_acls`, `kms`, `iam`, `iam_irsa` (new), `vpc_endpoints`, `eks`, `managed_node_groups`) with module-level constraint `>= 5.0, < 7.0` for AWS.
+
+**IAM module split (ADR-007)** — created new `terraform/modules/iam_irsa/` module containing:
+- EBS CSI driver IRSA role with corrected trust policy (uses issuer URL directly, enforces both `:sub` and `:aud` conditions, attaches AWS-managed `AmazonEBSCSIDriverPolicy`).
+- VPC CNI IRSA role for the `aws-node` ServiceAccount (defense-in-depth: removes need for `AmazonEKS_CNI_Policy` on the node instance profile).
+- Input variables with `validation { ... }` blocks that reject malformed OIDC ARNs and URLs that include `https://`.
+- Per-role boolean enable flags so `count` is static at plan time — this is the root-cause fix for the "count depends on unknown" error encountered when wiring the OIDC outputs into the original combined IAM module.
+
+The original `iam` module retained only the cluster role and node role; its `eks_oidc_provider_arn`, `eks_cluster_name`, and broken EBS CSI block were deleted.
+
+**Managed node groups module fixes**:
+- Added `capacity_type = var.use_spot ? "SPOT" : "ON_DEMAND"`.
+- Removed reserved label `topology.kubernetes.io/zone = "multi-az"`.
+- Removed `disk_size` from `aws_eks_node_group` resource (conflicts with launch template's `block_device_mappings`).
+- Removed unused `data.aws_partition` and `data.aws_caller_identity`.
+
+**EKS module cleanup**: removed unused `data.aws_partition` and `data.aws_caller_identity`.
+
+**Dev environment root** (`terraform/environments/dev/main.tf`):
+- `module "iam"` simplified back to base roles only.
+- New `module "iam_irsa"` added downstream of `module "eks"`, wired with `oidc_provider_arn` and `replace(module.eks.oidc_provider_url, "https://", "")`.
+
+### Validation Steps
+1. `terraform init` after adding all `versions.tf` files — succeeded, reused locked providers (no upgrades triggered).
+2. `terraform validate` — passed.
+3. First `terraform plan` after IAM split: clean: 12 to add, 2 to change, 0 to destroy. The 2 in-place updates were cosmetic SG egress changes (`from_port: -1 → 0`) from AWS provider v6 attribute normalization on the EXISTING networking resources.
+4. Verified state contained 108 resources but no EKS/node-group entries via `terraform state list | Select-String 'eks|node_group'`.
+
+### Destroy & Clean Slate
+Decision (in agreement with user): destroy the existing 104 networking resources and re-apply from a clean slate to avoid any state mismatch between the old design and the refactored modules.
+
+- First `terraform destroy` attempt: tool call timed out at the `Enter a value: yes` interactive prompt; orphaned terraform process held the S3 native lockfile.
+- Force-unlocked with `terraform force-unlock -force 52a053f9-2100-17df-e005-b5f6b2848de8`.
+- Re-ran `terraform destroy -auto-approve` — completed successfully.
+- Verified empty state: `terraform state list` returns 0 resources.
+- Verified AWS reality: `aws ec2 describe-vpcs --filters Name=tag:Project,Values=enterprise-eks-platform` returns empty; `aws kms list-aliases` shows no `dev-*` aliases.
+
+### Issues Encountered
+- **"Count depends on unknown" Terraform error** when wiring `module.eks.oidc_provider_arn` into `module.iam`'s `count = ... != null` expression. Root-caused to module-coupling and fixed by ADR-007 (split into `iam_irsa`).
+- **Orphaned `terraform destroy` process** at the `yes` confirmation prompt left the S3 lockfile in place. Resolved via `terraform force-unlock`.
+- **PowerShell tool output truncation** — some long-running `terraform destroy` outputs were truncated by `Select-String` filters in the wrapper, requiring explicit `terraform state list` follow-ups to confirm success.
+
+### Fixes Applied
+- Used `-auto-approve` flag for the re-run of destroy to avoid interactive prompt deadlock with the tool wrapper.
+- Used `terraform force-unlock` with the lock ID surfaced from the error output to recover from the orphaned process.
+
+### Lessons Learned
+- **Code review BEFORE apply is worth 10x the review cost AFTER apply.** Five of the seven blocking issues (broken regex, missing `:aud`, reserved label, missing `capacity_type`, count-on-unknown) would have either silently broken IRSA at runtime or required medium-risk refactors of live resources to fix later. Catching them while no EKS cluster yet existed reduced them to free improvements.
+- **`count` on `(known after apply)` values is a structural Terraform limitation, not a syntax issue.** The fix is always architectural: separate the resources, use `for_each` on a known map, or apply in stages. Module splits as in ADR-007 are the cleanest answer.
+- **The IRSA trust-policy pattern is high-risk for hand-rolled implementations.** Going forward we should consider using a small wrapper like `terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks` for community-vetted trust policies, or generate trust policies from a single template function to eliminate copy-paste drift.
+- **Interactive `terraform destroy` does not play nicely with non-TTY tool runners.** Default to `-auto-approve` in scripted workflows, and always have `force-unlock` instructions handy.
+- **Documenting refactors as ADRs (rather than "chore" commits) preserves the WHY for future engineers.** ADR-007 and ADR-008 explain not only what changed but what was tried and rejected.
+
+## Next Session Target: Phase 3 Clean Apply
+
+### Planned Work
+- `terraform plan -out=tfplan` — confirm ~120 resources to add.
+- Review the plan thoroughly (subnets, gateways, KMS, IAM, EKS cluster, node group, IRSA roles, add-ons).
+- `terraform apply tfplan` — expected duration ~18–22 minutes (NAT GW ~2 min + EKS control plane ~10 min + node group ~3 min + add-ons ~2 min).
+- Validate cluster: `aws eks update-kubeconfig`, then `kubectl get nodes -o wide`, `kubectl get pods -A`.
+- Verify IRSA: `kubectl describe sa -n kube-system ebs-csi-controller-sa` should show the role ARN annotation (will need separate manifest or Helm install for the actual EBS CSI controller pod).
+- Verify private cluster posture: confirm public endpoint is disabled, traffic flows via VPC endpoints.
+- Update progress-log.md, project-state.md, todo.md with apply outcomes.
+
+### Pre-apply checklist
+- [ ] AWS credentials valid (`aws sts get-caller-identity`)
+- [ ] AWS region matches `terraform.tfvars` (`us-east-1`)
+- [ ] No leftover resources tagged `Project=enterprise-eks-platform`
+- [ ] `terraform state list` returns 0
+- [ ] `terraform validate` passes
+- [ ] Documentation pushed to GitHub (this commit)

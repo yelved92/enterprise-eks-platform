@@ -6,9 +6,6 @@
 # and future Blue/Green deployments.
 # -----------------------------------------------------------------------------
 
-data "aws_partition" "current" {}
-data "aws_caller_identity" "current" {}
-
 # ------------------------------------------------------------------------------
 # CloudWatch Log Group for EKS Control Plane Logs
 # ------------------------------------------------------------------------------
