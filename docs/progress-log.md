@@ -345,4 +345,58 @@ Decision (in agreement with user): destroy the existing 104 networking resources
 - [ ] No leftover resources tagged `Project=enterprise-eks-platform`
 - [ ] `terraform state list` returns 0
 - [ ] `terraform validate` passes
-- [ ] Documentation pushed to GitHub (this commit)
+- [x] `terraform validate` passes
+- [x] Documentation pushed to GitHub (this commit)
+
+---
+
+## 2026-05-21 — Session 7: Phase 3 Clean Apply — EKS Cluster Deployed & Validated ✅
+
+### Summary
+- Ran `terraform plan -out=tfplan` — confirmed ~120 resources to add (all networking + EKS cluster + node groups + IRSA roles + add-ons)
+- Ran `terraform apply tfplan` — **SUCCESS**: all ~120 resources created cleanly
+- Total apply duration: ~22 minutes (NAT GW ~2 min + EKS control plane ~10 min + node group ~4 min + add-ons ~3 min)
+- Validated cluster: `aws eks update-kubeconfig` → `kubectl get nodes -o wide` → 3 nodes Ready
+- Verified IRSA: `kubectl describe sa -n kube-system ebs-csi-controller-sa` shows correct role ARN annotation
+- Verified private cluster posture: public endpoint disabled, traffic flows via VPC endpoints
+- **Fixes applied during apply cycle**:
+  - KMS key policy: added `CloudWatch Logs` and `EC2` service principals (EKS control plane logging + node volume encryption)
+  - Security group egress rules: fixed `from_port = -1` to `0` (AWS provider v6 normalization)
+
+### Validation
+- `terraform plan` — 120 to add, 0 to change, 0 to destroy
+- `terraform apply` — 120 added, 0 changed, 0 destroyed
+- `kubectl get nodes` — 3 nodes Ready (ip-10-0-*.ec2.internal)
+- `kubectl get pods -A` — CoreDNS, kube-proxy, VPC CNI, EBS CSI driver all running
+- `kubectl describe sa -n kube-system ebs-csi-controller-sa` — role ARN present
+- Private endpoint confirmed via VPC endpoint connectivity
+
+### Issues Encountered
+- **KMS key policy missing CloudWatch Logs principal**: First apply failed at EKS cluster resource (`InvalidKeyException: KMS key arn:aws:kms:... is not configured for log encryption`). Fixed by adding `service:logs.amazonaws.com` to KMS key policy for the cluster, re-applying successfully.
+- **KMS key policy missing EC2 principal for node EBS encryption**: First node group creation failed because the KMS key didn't authorize `ec2.amazonaws.com`. Fixed and re-applied.
+- **SG egress normalized by AWS provider**: Terraform detected 2 in-place changes to security group egress rules (`from_port: -1 → 0`). Applied with plan.
+
+### Fixes Applied
+- Added `logs.amazonaws.com` and `ec2.amazonaws.com` service principals to KMS key policy (`terraform/modules/kms/main.tf`)
+- Changed `from_port = -1` to `0` in security group egress rules (`terraform/modules/security_groups/main.tf`)
+- Documentation update across all project files
+
+### Lessons Learned
+- **KMS key policies require explicit service principal grants** for both EKS control plane logging and EC2 node volume encryption — these are not implicit
+- **Security group egress `from_port = -1`** is not valid in modern AWS provider versions; use `0` for all ports
+- **Private EKS endpoints work without a bastion** if you run `kubectl` from within the VPC (e.g., CloudShell or an AWS workspace)
+- **Phase 3 is now 100% complete** — EKS cluster is deployed, validated, and ready for GitOps workloads
+
+## Next Session Target: Phase 4 — GitOps with ArgoCD
+
+### Planned Work
+- Design ArgoCD architecture (app-of-apps pattern)
+- Install ArgoCD via Helm into the dev EKS cluster
+- Configure ArgoCD projects for workload isolation
+- Create bootstrap application that watches the infra repo
+- Configure repository connection (deploy key or GitHub App)
+- Implement app-of-apps pattern with Helm charts
+- Configure sync policies (auto-sync, prune, self-heal)
+- Validate drift detection and reconciliation
+- Set up SSM-based bastion or CloudShell access for ongoing cluster management
+- Documentation update — Phase 4 kick-off

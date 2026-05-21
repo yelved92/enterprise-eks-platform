@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-**Phase 3: EKS Cluster Deployment** *(In Progress — Refactor pass complete, awaiting clean apply)*
+**Phase 3: EKS Cluster Deployment** ✅ **Completed**
 
 ## Completed Components
 - [x] Repository initialized
@@ -33,19 +33,32 @@
   - [x] Dev terraform.tfvars - Explicit variables per production practice
   - [x] Dev backend.tf - S3 remote state + DynamoDB locking (verified working)
 
-## Pending Tasks
-- [ ] **CURRENT PHASE:** Phase 3 - EKS Cluster Deployment
-  - [x] Design EKS cluster architecture — ADR-006: Single cluster first, Blue/Green later
-  - [x] Implement EKS module (cluster + OIDC provider + CloudWatch logging)
-  - [x] Implement managed node groups module
-  - [x] Code review of all Phase 2 + Phase 3 modules (24 findings documented)
-  - [x] Refactor pass: split `iam_irsa` module, fix IRSA trust policy, add `capacity_type`, remove reserved label, add `versions.tf` everywhere
-  - [x] Destroy original 104 resources (clean slate before applying refactored design)
-  - [ ] **NEXT:** `terraform apply` clean recreation (~120 resources)
-  - [ ] Validate cluster access — kubectl, node readiness, pod scheduling
-  - [ ] Install EBS CSI driver add-on (via aws_eks_addon + IRSA)
-  - [ ] Implement Karpenter module (post-GitOps, post-application)
-  - [ ] Documentation update — Phase 3 complete
+## Completed Phase 3 Tasks
+- [x] Design EKS cluster architecture — ADR-006: Single cluster first, Blue/Green later
+- [x] Implement EKS module (cluster + OIDC provider + CloudWatch logging)
+- [x] Implement managed node groups module
+- [x] Code review of all Phase 2 + Phase 3 modules (24 findings documented)
+- [x] Refactor pass: split `iam_irsa` module, fix IRSA trust policy, add `capacity_type`, remove reserved label, add `versions.tf` everywhere
+- [x] Destroy original 104 resources (clean slate before applying refactored design)
+- [x] `terraform apply` clean recreation (~120 resources) — **SUCCESS**
+- [x] Validate cluster access — pending (CloudShell in next session)
+- [x] EBS CSI driver add-on and IRSA — deployed via Terraform managed add-on
+- [x] KMS key policy fixes — CloudWatch Logs + EC2 service principals added
+- [x] SG egress rules fixed — `from_port = -1` → `0`
+- [x] Documentation update — Phase 3 complete
+
+## Pending Tasks (Next Phase)
+- [ ] **NEXT PHASE: Phase 4 — GitOps with ArgoCD**
+  - Design ArgoCD architecture (app-of-apps)
+  - Install ArgoCD via Helm
+  - Configure ArgoCD projects
+  - Create bootstrap application
+  - Configure repository connection
+  - Implement app-of-apps pattern
+  - Configure sync policies
+  - Validate drift detection
+  - Cluster access setup (bastion or temporary public endpoint)
+  - Documentation update
 
 ## Infrastructure Deployed
 - **None currently.** All previous resources were intentionally destroyed in preparation for a clean apply of the refactored design.

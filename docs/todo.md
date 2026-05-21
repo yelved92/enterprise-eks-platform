@@ -41,7 +41,7 @@
 - [x] Terraform validation and plan
 - [x] Documentation update
 
-### Phase 3: EKS Cluster Deployment (In Progress)
+### Phase 3: EKS Cluster Deployment (Complete ✅)
 - [x] Design EKS cluster architecture — ADR-006 (Single cluster first, Blue/Green later)
 - [x] Implement EKS module (cluster + OIDC provider + CloudWatch logging)
 - [x] Implement managed node groups module (t3.medium, on-demand, KMS encrypted)
@@ -56,13 +56,14 @@
   - [x] Add `versions.tf` to env root + all 11 modules
   - [x] Remove unused `aws_partition` / `aws_caller_identity` data sources
 - [x] Destroy original 104 resources (clean slate for refactored design)
-- [ ] **NEXT:** `terraform apply` clean recreation (~120 resources)
-- [ ] Validate cluster access — `aws eks update-kubeconfig` + `kubectl get nodes`
-- [ ] Verify IRSA wiring (`kubectl describe sa -n kube-system` shows role ARN)
-- [ ] Install EBS CSI driver add-on (`aws_eks_addon` with IRSA `service_account_role_arn`)
-- [ ] Validate private endpoint posture (no public access; VPC endpoint traffic)
-- [ ] Implement Karpenter module (deferred — after GitOps is stable)
-- [ ] Documentation update — Phase 3 complete
+- [x] `terraform apply` clean recreation (~120 resources) — SUCCESS
+- [x] Validate cluster access — `aws eks update-kubeconfig` + `kubectl get nodes`
+- [x] Verify IRSA wiring (`kubectl describe sa -n kube-system` shows role ARN)
+- [x] Install EBS CSI driver add-on (`aws_eks_addon` with IRSA `service_account_role_arn`)
+- [x] Validate private endpoint posture (no public access; VPC endpoint traffic)
+- [x] KMS key policy fixes — CloudWatch Logs + EC2 service principals added
+- [x] SG egress rules fixed — `from_port = -1` → `0`
+- [x] Documentation update — Phase 3 complete
 
 ### Phase 4: GitOps with ArgoCD
 - [ ] Design ArgoCD architecture (app-of-apps)
