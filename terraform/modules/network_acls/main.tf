@@ -104,13 +104,26 @@ resource "aws_network_acl_rule" "private_ingress_vpc" {
   cidr_block     = var.vpc_cidr_block
   from_port      = 0
   to_port        = 0
+    }
+
+resource "aws_network_acl_rule" "private_ingress_ephemeral" {
+  count = length(var.private_app_subnet_ids) > 0 ? 1 : 0
+
+  network_acl_id = aws_network_acl.private[0].id
+  rule_number    = 110
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 1024
+  to_port        = 65535
 }
 
 resource "aws_network_acl_rule" "private_egress_vpc" {
   count = length(var.private_app_subnet_ids) > 0 ? 1 : 0
 
   network_acl_id = aws_network_acl.private[0].id
-  rule_number    = 100
+  rule_number    = 200
   egress         = true
   protocol       = "-1"
   rule_action    = "allow"
@@ -123,7 +136,7 @@ resource "aws_network_acl_rule" "private_egress_internet" {
   count = length(var.private_app_subnet_ids) > 0 ? 1 : 0
 
   network_acl_id = aws_network_acl.private[0].id
-  rule_number    = 110
+  rule_number    = 210
   egress         = true
   protocol       = "tcp"
   rule_action    = "allow"

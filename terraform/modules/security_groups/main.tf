@@ -87,8 +87,6 @@ resource "aws_vpc_security_group_ingress_rule" "cluster_api_vpc" {
 resource "aws_vpc_security_group_egress_rule" "cluster_egress" {
   security_group_id = aws_security_group.cluster.id
   cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 0
-  to_port           = 0
   ip_protocol       = "-1"
   description       = "Cluster egress to all"
 }
@@ -145,8 +143,6 @@ resource "aws_vpc_security_group_ingress_rule" "nodes_vpc" {
 resource "aws_vpc_security_group_egress_rule" "nodes_egress" {
   security_group_id = aws_security_group.nodes.id
   cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 0
-  to_port           = 0
   ip_protocol       = "-1"
   description       = "Node egress to all"
 }

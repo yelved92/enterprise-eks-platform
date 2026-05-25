@@ -18,6 +18,13 @@ data "aws_vpc_endpoint_service" "dynamodb" {
   service_type = "Gateway"
 }
 
+# S3 Interface endpoint data source (for HTTPS access from container runtime)
+data "aws_vpc_endpoint_service" "s3_interface" {
+  count        = var.enable_s3_interface_endpoint ? 1 : 0
+  service      = "s3"
+  service_type = "Interface"
+}
+
 # ------------------------------------------------------------------------------
 # Gateway Endpoints (S3, DynamoDB)
 # ------------------------------------------------------------------------------
@@ -83,7 +90,7 @@ resource "aws_vpc_endpoint_route_table_association" "dynamodb_private_data" {
 }
 
 # ------------------------------------------------------------------------------
-# Interface Endpoints (ECR, SSM, KMS, Logs, STS)
+# Interface Endpoints (ECR, SSM, KMS, Logs, STS, EC2, S3)
 # ------------------------------------------------------------------------------
 locals {
   interface_endpoints = {
@@ -111,14 +118,22 @@ locals {
       enable  = var.enable_sts_endpoint
       service = "sts"
     }
+    ec2 = {
+      enable  = var.enable_ec2_endpoint
+      service = "ec2"
+    }
+    s3 = {
+      enable  = var.enable_s3_interface_endpoint
+      service = "s3"
+    }
   }
 }
 
 resource "aws_vpc_endpoint" "interface" {
   for_each = { for k, v in local.interface_endpoints : k => v if v.enable }
 
-  vpc_id              = var.vpc_id
-  service_name        = "com.amazonaws.${data.aws_region.current.region}.${each.value.service}"
+    vpc_id              = var.vpc_id
+  service_name        = each.key == "s3" ? data.aws_vpc_endpoint_service.s3_interface[0].service_name : "com.amazonaws.${data.aws_region.current.region}.${each.value.service}"
   vpc_endpoint_type   = "Interface"
   subnet_ids          = var.private_app_subnet_ids
   security_group_ids  = var.security_group_id != null ? [var.security_group_id] : []
@@ -133,3 +148,5 @@ resource "aws_vpc_endpoint" "interface" {
     var.tags
   )
 }
+
+

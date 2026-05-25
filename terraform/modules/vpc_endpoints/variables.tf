@@ -88,6 +88,18 @@ variable "enable_sts_endpoint" {
   default     = true
 }
 
+variable "enable_s3_interface_endpoint" {
+  description = "Enable S3 Interface Endpoint (required for HTTPS traffic from containers)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_ec2_endpoint" {
+  description = "Enable EC2 Interface Endpoint (required for private-only EKS clusters)"
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Additional tags for all VPC endpoint resources"
   type        = map(string)

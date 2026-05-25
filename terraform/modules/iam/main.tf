@@ -133,15 +133,13 @@ resource "aws_iam_role_policy" "node_additional" {
           "kms:Decrypt",
           "kms:Encrypt",
           "kms:GenerateDataKeyWithoutPlaintext",
-          "kms:CreateGrant"
+          "kms:GenerateDataKey",
+          "kms:CreateGrant",
+          "kms:DescribeKey",
+          "kms:ReEncrypt*"
         ]
         Effect   = "Allow"
         Resource = "*"
-        Condition = {
-          "StringEquals" = {
-            "kms:ViaService" = "ec2.${data.aws_region.current.region}.amazonaws.com"
-          }
-        }
       },
       {
         Action = [
@@ -162,6 +160,6 @@ resource "aws_iam_role_policy" "node_additional" {
 # Roles assumed by Kubernetes ServiceAccounts via OIDC (EBS CSI, VPC CNI,
 # ArgoCD, ExternalDNS, etc.) live in the dedicated `iam_irsa` module. They
 # require the EKS OIDC provider URL, which is only known AFTER the cluster
-# is created — keeping them in a separate module avoids a count-on-unknown
-# error during the FIRST plan/apply.
+# is created — keeping them in a separate module avoids a count-on-unknown error during the FIRST plan/apply.
 # ------------------------------------------------------------------------------
+

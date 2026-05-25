@@ -70,35 +70,67 @@ resource "aws_kms_key" "ebs" {
   enable_key_rotation     = var.enable_key_rotation
   key_usage               = "ENCRYPT_DECRYPT"
   policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "Enable IAM User Permissions"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "kms:*"
-        Resource = "*"
-      },
-      {
-        Sid    = "Allow EC2 to use the key for EBS volumes"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-        Action = [
-          "kms:Encrypt",
-          "kms:Decrypt",
-          "kms:ReEncrypt*",
-          "kms:GenerateDataKeyWithoutPlaintext",
-          "kms:CreateGrant",
-          "kms:DescribeKey"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Sid    = "Enable IAM User Permissions"
+          Effect = "Allow"
+          Principal = {
+            AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          }
+          Action   = "kms:*"
+          Resource = "*"
+        },
+        {
+          Sid    = "Allow EC2 to use the key for EBS volumes"
+          Effect = "Allow"
+          Principal = {
+            Service = "ec2.amazonaws.com"
+          }
+          Action = [
+            "kms:Encrypt",
+            "kms:Decrypt",
+            "kms:ReEncrypt*",
+            "kms:GenerateDataKeyWithoutPlaintext",
+            "kms:CreateGrant",
+            "kms:DescribeKey"
+          ]
+          Resource = "*"
+        },
+        {
+          Sid    = "Allow EKS to use the key for EBS volumes"
+          Effect = "Allow"
+          Principal = {
+            Service = "eks.amazonaws.com"
+          }
+          Action = [
+            "kms:Encrypt",
+            "kms:Decrypt",
+            "kms:ReEncrypt*",
+            "kms:GenerateDataKeyWithoutPlaintext",
+            "kms:CreateGrant",
+            "kms:DescribeKey"
+          ]
+          Resource = "*"
+        },
+        {
+          Sid    = "Allow Auto Scaling service-linked role to use the key for EBS volumes"
+          Effect = "Allow"
+          Principal = {
+            AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"
+          }
+          Action = [
+            "kms:Encrypt",
+            "kms:Decrypt",
+            "kms:ReEncrypt*",
+            "kms:GenerateDataKeyWithoutPlaintext",
+            "kms:CreateGrant",
+            "kms:DescribeKey"
+          ]
+          Resource = "*"
+                }
+      ]
+    })
 
   tags = merge(
     {

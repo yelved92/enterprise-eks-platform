@@ -145,8 +145,10 @@ module "vpc_endpoints" {
   private_app_route_table_ids = module.routing.private_app_route_table_ids
   private_data_route_table_ids = module.routing.private_data_route_table_ids
   security_group_id          = module.security_groups.cluster_security_group_id
-  enable_s3_gateway_endpoint   = true
+    enable_s3_gateway_endpoint   = true
+  enable_s3_interface_endpoint  = true
   enable_dynamodb_gateway_endpoint = true
+  enable_ec2_endpoint           = true
   enable_ecr_api_endpoint     = true
   enable_ecr_dkr_endpoint     = true
   enable_ssm_endpoint         = true
