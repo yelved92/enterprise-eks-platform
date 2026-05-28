@@ -18,6 +18,7 @@ resource "aws_eks_node_group" "this" {
 
   instance_types = var.instance_types
   capacity_type  = var.use_spot ? "SPOT" : "ON_DEMAND"
+  version       = var.cluster_version
 
   # disk_size is intentionally omitted: when launch_template is used, EBS
   # configuration (size, type, IOPS, KMS) comes from the launch template.

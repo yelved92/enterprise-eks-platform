@@ -86,3 +86,10 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+
+variable "cluster_version" {
+  description = "Kubernetes version for the node group (must match cluster version)"
+  type        = string
+  default     = null
+}

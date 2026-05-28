@@ -208,6 +208,7 @@ module "node_group" {
   source = "../../modules/managed_node_groups"
 
   cluster_name            = module.eks.cluster_name
+  cluster_version         = var.cluster_version
   node_group_name         = var.node_group_name
   node_role_arn           = module.iam.node_role_arn
   subnet_ids              = module.subnets.private_app_subnet_ids
