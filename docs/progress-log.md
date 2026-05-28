@@ -38,5 +38,20 @@
 - Validation: 3 nodes Ready, all system pods running, IRSA working, private endpoint confirmed
 - Laptop IP whitelisted for `kubectl` access
 
-## Next: Phase 4 — GitOps with ArgoCD
+## 2026-05-27 — Session 8: Phase 4 Planning & Architecture Decisions ✅
+- Revised Phase 4 plan to include three sub-phases:
+  - **4A:** Base ArgoCD installation via Terraform Helm provider
+  - **4B:** TLS (cert-manager + Let's Encrypt) + GitHub OAuth SSO for ArgoCD UI
+  - **4C:** GitOps validation with OpenTelemetry Demo as first workload
+- **Key decisions made:**
+  - ArgoCD exposed via public NLB with TLS + GitHub OAuth (not local admin password)
+  - cert-manager deployed in Phase 4B (not Phase 5) — it's infrastructure for HTTPS, not a security policy
+  - OTel Demo deployed right after ArgoCD (not delayed until Phase 8) — validates GitOps with real workload
+  - Ansible used later for DR, upgrades, chaos testing — not for current phases
+  - Night destroy/apply cycle viable for cost savings (~$120/mo), deferred until platform is stable
+- Cost analysis reviewed: ~$152/mo current, biggest drivers EKS control plane ($92) + NAT ($32)
+- Updated project-state.md with revised Phase 4 sub-steps
+- Updated todo.md with refined Phase 4 breakdown
+
+## Next: Phase 4A — Step 4.1: Deploy ArgoCD via Terraform Helm provider
 
