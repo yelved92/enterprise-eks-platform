@@ -14,5 +14,4 @@ spec:
     solvers:
       - http01:
           ingress:
-            class: nginx
-            skipSelfCheck: true
+            ingressClassName: nginx
