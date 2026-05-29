@@ -1,0 +1,35 @@
+"# ------------------------------------------------------------------------------
+# Platform Application Definitions
+# ------------------------------------------------------------------------------
+# This file is a placeholder for child applications that will be managed by the
+# bootstrap app-of-apps. Each entry below can be uncommented and configured as
+# ArgoCD Applications are defined for platform components.
+#
+# Phase 4B: cert-manager
+# Phase 4B: ArgoCD Config (TLS + OAuth)
+# Phase 4C: OpenTelemetry Demo
+# Phase 5:   Kyverno / External Secrets
+# Phase 6:   Istio
+# Phase 7:   Prometheus / Grafana / Loki / Tempo
+# ------------------------------------------------------------------------------
+
+# Example structure when adding a child app:
+#
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: cert-manager
+#   namespace: argocd
+# spec:
+#   project: platform
+#   source:
+#     repoURL: {{ .Values.spec.source.repoURL }}
+#     targetRevision: HEAD
+#     path: helm/cert-manager
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: cert-manager
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true"

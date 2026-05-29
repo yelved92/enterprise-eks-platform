@@ -9,6 +9,8 @@
 #   - aws    = 6.45.0
 #   - random = 3.9.0
 #   - tls    = 4.3.0
+#   - helm   = 2.14.0 (approx)
+#   - kubernetes = 2.30.0 (approx)
 #
 # To upgrade providers intentionally:
 #   1. Bump the constraint here (or use `terraform init -upgrade`)
@@ -31,6 +33,14 @@ terraform {
     tls = {
       source  = "hashicorp/tls"
       version = "~> 4.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.30"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.14"
     }
   }
 }

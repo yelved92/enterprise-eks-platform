@@ -2,7 +2,7 @@
 ## High Priority
 
 ### Phase 4 — GitOps with ArgoCD **[NEXT]**
-- [ ] Install ArgoCD via Terraform Helm provider → `argocd` namespace
+- [x] Install ArgoCD via Terraform Helm provider → `argocd` namespace
 - [ ] Configure GitHub repo connection (deploy key or PAT)
 - [ ] Create ArgoCD project + bootstrap app
 - [ ] Implement app-of-apps pattern (root → child apps)
@@ -27,7 +27,7 @@
 ### Phase 4 — GitOps with ArgoCD + Secure Access + OTel Demo **[NEXT]**
 
 #### Phase 4A: Base ArgoCD Installation
-- [ ] **4.1** Deploy ArgoCD via Terraform Helm provider → `argocd` namespace
+- [x] **4.1** Deploy ArgoCD via Terraform Helm provider → `argocd` namespace
 - [ ] **4.2** Create ArgoCD project + bootstrap app-of-apps root Application
 - [ ] **4.3** Configure sync policies (auto-sync, self-heal, prune)
 - [ ] **4.4** Validate drift detection and reconciliation
@@ -60,21 +60,6 @@
 - **Phase 8:** CI/CD pipelines (GitHub Actions — lint, scan, build, deploy, smoke tests)
 - **Phase 9:** Disaster Recovery (Velero, EBS snapshots, failover, DR runbooks)
 - **Phase 10:** Advanced topics (Chaos, Karpenter, Spot, Cosign, kube-bench, SRE playbooks)
-
-## Technical Debt
-- [ ] Fix `Environment = var.cluster_name` tag misnomer
-- [ ] Pin EKS add-on versions explicitly
-- [ ] Add per-endpoint flag for VPC endpoints (cost ~$43/mo)
-- [ ] Strip EBS/EC2 volume permissions from node IAM role (use IRSA instead)
-- [ ] Add prod environment directory stubi have changed you to agent mode
-- [ ] Add `.tflint.hcl`, `.tfsec/`, `.checkov.yaml` baselines
-- [ ] Cluster SG attached to EKS instead of node SG (fix at Blue/Green)
-- [ ] No bastion for team access (not blocking — laptop IP whitelisted)
-- [ ] Deploy via ArgoCD, ingress, tracing, autoscaling
-## Medium Priority
-- **Phase 9:** CI/CD pipelines (GitHub Actions — lint, scan, build, deploy, smoke tests)
-- **Phase 10:** Disaster Recovery (Velero, EBS snapshots, failover, DR runbooks)
-- **Phase 11:** Advanced topics (Chaos, Karpenter, Spot, Cosign, kube-bench, SRE playbooks)
 
 ## Technical Debt
 - [ ] Fix `Environment = var.cluster_name` tag misnomer

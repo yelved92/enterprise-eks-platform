@@ -53,5 +53,19 @@
 - Updated project-state.md with revised Phase 4 sub-steps
 - Updated todo.md with refined Phase 4 breakdown
 
-## Next: Phase 4A — Step 4.1: Deploy ArgoCD via Terraform Helm provider
+## 2026-05-28 — Session 9: Phase 4A — ArgoCD Deployed ✅
+- **Live fixes during apply:**
+  - Fixed stray `"` quotes in `argocd/versions.tf`, `outputs.tf`, `variables.tf` (caused plan error)
+  - Fixed `repositories: |` → `repositories:` (Helm template can't iterate a string)
+  - Removed duplicate `random_password` + `kubernetes_secret_v1` (Helm chart auto-creates admin secret)
+  - Removed stray `EOT` at end of `main.tf`
+- EKS cluster upgraded **1.33 → 1.34** alongside ArgoCD deployment
+- ArgoCD v2.8.3 (Helm chart 5.46.0) deployed into `argocd` namespace
+- 7 pods running: application-controller, applicationset-controller, dex-server, notifications, redis, repo-server, server
+- RBAC configured: `yelved92` mapped as admin, default role: readonly
+- Git repo registered: `https://github.com/yelved92/enterprise-eks-platform.git`
+- Admin password retrieved from auto-created secret via `kubectl`
+- UI confirmed accessible via `kubectl port-forward svc/argocd-server 9090:80`
+
+## Next: Phase 4A — Step 4.2: Create ArgoCD project + bootstrap app-of-apps
 

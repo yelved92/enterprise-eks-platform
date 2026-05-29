@@ -131,3 +131,27 @@ variable "tags" {
     ManagedBy   = "terraform"
   }
 }
+
+
+# ------------------------------------------------------------------------------
+# ArgoCD Variables (Phase 4)
+# ------------------------------------------------------------------------------
+
+variable "argocd_git_repo_url" {
+  description = "URL of the Git repository for ArgoCD to sync from"
+  type        = string
+}
+
+variable "argocd_git_repo_name" {
+  description = "Name/label for the Git repository in ArgoCD"
+  type        = string
+  default     = "enterprise-eks-platform"
+}
+
+variable "argocd_admin_user" {
+  description = "GitHub username or identity to grant ArgoCD admin access"
+  type        = string
+  default     = "yelved92"
+}
+
+
