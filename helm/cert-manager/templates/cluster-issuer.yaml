@@ -15,4 +15,5 @@ spec:
       - http01:
           ingress:
             ingressClassName: nginx
+            skipSelfCheck: true
             serviceType: ClusterIP
