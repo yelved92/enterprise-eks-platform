@@ -10,10 +10,20 @@ metadata:
 spec:
   project: platform
 
-  source:
-    repoURL: "https://github.com/yelved92/enterprise-eks-platform.git"
-    targetRevision: HEAD
-    path: helm/cert-manager
+  sources:
+    - repoURL: "https://charts.jetstack.io"
+      chart: cert-manager
+      targetRevision: v1.14.5
+      helm:
+        valuesObject:
+          installCRDs: true
+          replicaCount: 1
+
+    - repoURL: "https://github.com/yelved92/enterprise-eks-platform.git"
+      targetRevision: feat/phase-4-argocd
+      path: helm/cert-manager/templates
+      directory:
+        recurse: true
 
   destination:
     namespace: cert-manager

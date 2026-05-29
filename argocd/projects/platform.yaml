@@ -10,13 +10,18 @@ spec:
   description: "Platform infrastructure and services for the enterprise EKS platform"
 
   # Allow manifests from the enterprise-eks-platform Git repository
+  # and upstream Helm repositories for platform add-ons
   sourceRepos:
     - "https://github.com/yelved92/enterprise-eks-platform.git"
+    - "https://charts.jetstack.io"
   # Destinations: only this cluster, only platform-managed namespaces
+  # cert-manager needs kube-system for leader election roles
   destinations:
     - namespace: argocd
       server: "https://kubernetes.default.svc"
     - namespace: cert-manager
+      server: "https://kubernetes.default.svc"
+    - namespace: kube-system
       server: "https://kubernetes.default.svc"
     - namespace: opentelemetry-demo
       server: "https://kubernetes.default.svc"
@@ -43,6 +48,16 @@ spec:
       kind: MutatingWebhookConfiguration
     - group: certificates.k8s.io
       kind: CertificateSigningRequest
+    - group: cert-manager.io
+      kind: ClusterIssuer
+    - group: cert-manager.io
+      kind: Issuer
+    - group: cert-manager.io
+      kind: Certificate
+    - group: acme.cert-manager.io
+      kind: Challenge
+    - group: acme.cert-manager.io
+      kind: Order
 
   # Namespaced resources — allow everything for platform services
   namespaceResourceWhitelist:

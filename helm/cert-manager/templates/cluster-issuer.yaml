@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/part-of: enterprise-eks-platform
 spec:
   acme:
-    email: admin@example.com
+    email: yelved92@gmail.com
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: letsencrypt-prod-account-key
