@@ -319,11 +319,11 @@ output "eks_node_group_name" {
 
 
 # ------------------------------------------------------------------------------
-# ArgoCD Module — GitOps Deployment (Phase 4)
+# ArgoCD Module ï¿½ GitOps Deployment (Phase 4)
 # ------------------------------------------------------------------------------
 # Deploys ArgoCD into the EKS cluster using the Helm provider.
 # The cluster must already exist before this module runs.
-# Uses cluster-local service (ClusterIP) — no public exposure in Phase 4A.
+# Uses cluster-local service (ClusterIP) ï¿½ no public exposure in Phase 4A.
 # ------------------------------------------------------------------------------
 # NOTE: The kubernetes and helm providers are configured in providers.tf and
 # depend on module.eks. That implicit dependency ensures this module runs
@@ -341,4 +341,10 @@ module "argocd" {
 
   tags = var.tags
 }
+
+# ------------------------------------------------------------------------------
+# cert-manager, ClusterIssuer, and future add-ons are deployed via ArgoCD
+# GitOps (see argocd/applications/) rather than Terraform. This follows the
+# principle: Terraform manages AWS infrastructure, ArgoCD manages cluster apps.
+# ------------------------------------------------------------------------------
 

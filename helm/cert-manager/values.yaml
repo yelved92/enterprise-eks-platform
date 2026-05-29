@@ -1,0 +1,17 @@
+# ==============================================================================
+# cert-manager Helm Values
+# ==============================================================================
+# Deployed via ArgoCD GitOps. Customize settings here.
+# ------------------------------------------------------------------------------
+
+cert-manager:
+  installCRDs: true
+  replicaCount: 1
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
