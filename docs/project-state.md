@@ -34,9 +34,9 @@
 
 ### Phase 4A: Base ArgoCD Installation
 - [x] **4.1** Deploy ArgoCD via Terraform Helm provider → `argocd` namespace
-- [ ] **4.2** Create ArgoCD project + bootstrap app-of-apps root Application
-- [ ] **4.3** Configure sync policies (auto-sync, self-heal, prune)
-- [ ] **4.4** Validate drift detection and reconciliation
+- [x] **4.2** Create ArgoCD project + bootstrap app-of-apps root Application
+- [x] **4.3** Configure sync policies (auto-sync, self-heal, prune)
+- [x] **4.4** Validate drift detection and reconciliation
 
 ### Phase 4B: TLS + OAuth (GitHub SSO) for ArgoCD UI
 - [ ] **4.5** Deploy cert-manager via Terraform/Helm (ClusterIssuer + Let's Encrypt)

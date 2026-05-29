@@ -1,4 +1,4 @@
-"# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Platform Application Definitions
 # ------------------------------------------------------------------------------
 # This file is a placeholder for child applications that will be managed by the
@@ -32,4 +32,4 @@
 #   syncPolicy:
 #     automated:
 #       prune: true
-#       selfHeal: true"
+#       selfHeal: true

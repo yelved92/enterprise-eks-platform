@@ -66,6 +66,9 @@
 - Git repo registered: `https://github.com/yelved92/enterprise-eks-platform.git`
 - Admin password retrieved from auto-created secret via `kubectl`
 - UI confirmed accessible via `kubectl port-forward svc/argocd-server 9090:80`
+- **Step 4.2:** Created `AppProject/platform` + `Application/bootstrap` (app-of-apps root)
+- **Step 4.3/4.4:** Sync policies (prune, selfHeal, allowEmpty) already configured on bootstrap app
+- Fixed stray `"` quotes in `argocd/applications/bootstrap.yaml`, `platform-apps.yaml`
 
-## Next: Phase 4A — Step 4.2: Create ArgoCD project + bootstrap app-of-apps
+## Next: Phase 4B — TLS + OAuth (GitHub SSO) for ArgoCD UI
 
