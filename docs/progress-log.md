@@ -70,5 +70,17 @@
 - **Step 4.3/4.4:** Sync policies (prune, selfHeal, allowEmpty) already configured on bootstrap app
 - Fixed stray `"` quotes in `argocd/applications/bootstrap.yaml`, `platform-apps.yaml`
 
-## Next: Phase 4B — TLS + OAuth (GitHub SSO) for ArgoCD UI
+## 2026-05-28 — Session 10: Phase 4B — cert-manager via ArgoCD GitOps ✅
+- **Architecture decision:** cert-manager deployed via ArgoCD (not Terraform) — cluster add-ons belong in GitOps
+- Created multi-source ArgoCD Application for cert-manager (upstream Helm chart + local ClusterIssuer)
+- Updated `AppProject/platform` with:
+  - Jetstack Helm repo (`https://charts.jetstack.io`)
+  - `kube-system` namespace (for cert-manager leader election)
+  - cert-manager CRDs (ClusterIssuer, Issuer, Certificate, Challenge, Order)
+- Let's Encrypt ClusterIssuer created (`letsencrypt-prod`, email: yelved92@gmail.com)
+- cert-manager v1.14.5 running: cert-manager, cainjector, webhook (3 pods)
+- Fixed `admin@example.com` → `yelved92@gmail.com` (Let's Encrypt rejects example.com)
+- **Live fixes:** project `sourceRepos`, `destinations`, `clusterResourceWhitelist` all iteratively updated
+
+## Next: Phase 4B — Steps 4.6-4.9: NLB, TLS, GitHub OAuth
 

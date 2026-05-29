@@ -33,7 +33,7 @@
 - [x] **4.4** Validate drift detection and reconciliation
 
 #### Phase 4B: TLS + OAuth (GitHub SSO) for ArgoCD UI
-- [ ] **4.5** Deploy cert-manager via Terraform/Helm (ClusterIssuer + Let's Encrypt)
+- [x] **4.5** Deploy cert-manager via ArgoCD GitOps (Helm chart + Let's Encrypt ClusterIssuer)
 - [ ] **4.6** Create Route53 DNS record for ArgoCD UI (e.g., argocd.yourdomain.com)
 - [ ] **4.7** Configure ArgoCD LoadBalancer with TLS (NLB + cert-manager annotation)
 - [ ] **4.8** Create GitHub OAuth App + configure ArgoCD Dex SSO
