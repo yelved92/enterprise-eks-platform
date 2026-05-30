@@ -82,5 +82,19 @@
 - Fixed `admin@example.com` → `yelved92@gmail.com` (Let's Encrypt rejects example.com)
 - **Live fixes:** project `sourceRepos`, `destinations`, `clusterResourceWhitelist` all iteratively updated
 
-## Next: Phase 4B — Steps 4.6-4.9: NLB, TLS, GitHub OAuth
+## 2026-05-30 — Session 11: Phase 4B Complete — GitHub OAuth SSO + Org Restriction ✅
+- **Steps 4.6/4.7 (NLB + TLS):** Already working from prior session — nginx-ingress NLB + cert-manager TLS confirmed
+- **Step 4.8 (GitHub OAuth):** Full Dex SSO implementation:
+  - Created GitHub OAuth App `Ov23ctOhGXMVhcioRbt8`
+  - Added OAuth variables to ArgoCD Terraform module (`oauth_enabled`, `client_id`, `client_secret`, `org`)
+  - Refactored Helm values from inline to `templatefile()` approach for cleaner conditional Dex config
+  - Fixed `dex.config` YAML path — goes under `configs.cm.dex.config` in the Helm chart
+  - Dex confirmed running with "config connector: github" in logs
+- **Org restriction:** Created `yelved-org` GitHub org, restricted Dex to only org members
+- **Admin disabled:** Set `admin.enabled: false` — GitHub OAuth is the only login method
+- **RBAC:** `yelved92` mapped to admin, all others read-only
+- **Security hardening:** Attempted `loadBalancerSourceRanges` but chart doesn't render it; left `preserve_client_ip.enabled=true` as improvement
+- Git history cleaned (squashed commits with IP references)
+
+## Next: Phase 4C — Steps 4.10-4.12: OpenTelemetry Demo deployment & GitOps validation
 
