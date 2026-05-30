@@ -42,6 +42,36 @@ variable "argocd_domain" {
   default     = ""
 }
 
+# ------------------------------------------------------------------------------
+# OAuth / Dex Variables (Phase 4B)
+# ------------------------------------------------------------------------------
+
+variable "oauth_enabled" {
+  description = "Enable GitHub OAuth SSO via Dex"
+  type        = bool
+  default     = false
+}
+
+variable "oauth_client_id" {
+  description = "GitHub OAuth App Client ID"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "oauth_client_secret" {
+  description = "GitHub OAuth App Client Secret"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "oauth_org" {
+  description = "Restrict GitHub OAuth to a specific organization (optional)"
+  type        = string
+  default     = ""
+}
+
 variable "tags" {
   description = "Additional tags for resources"
   type        = map(string)

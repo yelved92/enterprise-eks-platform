@@ -30,112 +30,19 @@ resource "helm_release" "argocd" {
   timeout          = 600
   cleanup_on_fail  = true
 
+  # Build the core YAML, optionally appending Dex config for GitHub OAuth
   values = [
-    # Core values — NLB + ingress enabled when argocd_domain is set
-    <<-EOT
-    # --------------------------------------------------------------------------
-    # Global settings
-    # --------------------------------------------------------------------------
-    global:
-      domain: ${var.argocd_domain != "" ? var.argocd_domain : "argocd.${var.cluster_name}.svc.cluster.local"}
-
-    # --------------------------------------------------------------------------
-    # Server (ArgoCD API + UI)
-    # --------------------------------------------------------------------------
-    server:
-      service:
-        type: ClusterIP
-        port: 443
-
-      # Ingress enabled when domain is set — routed through nginx-ingress
-      ingress:
-        enabled: ${var.argocd_domain != "" ? true : false}
-        annotations:
-          cert-manager.io/cluster-issuer: letsencrypt-prod
-          kubernetes.io/tls-acme: "true"
-        labels: {}
-        ingressClassName: nginx
-        hosts:
-          - ${var.argocd_domain}
-        tls:
-          - hosts:
-              - ${var.argocd_domain}
-            secretName: argocd-server-tls
-
-      # RBAC via configmap (no SSO yet)
-      rbacConfig:
-        policy.default: role:readonly
-        policy.csv: |
-          p, role:admin, applications, *, */*, allow
-          p, role:admin, clusters, *, *, allow
-          p, role:admin, projects, *, *, allow
-          g, ${var.admin_user}, role:admin
-
-    # --------------------------------------------------------------------------
-    # Config Management Plugins (Helm, Kustomize)
-    # --------------------------------------------------------------------------
-    configs:
-      params:
-        server.insecure: true      # TLS termination handled externally
-        server.disable.auth: false  # Auth required
-
-      # Repository connection — managed via Terraform variable
-      repositories:
-        - url: ${var.git_repo_url}
-          type: git
-          name: ${var.git_repo_name}
-
-    # --------------------------------------------------------------------------
-    # Controller settings
-    # --------------------------------------------------------------------------
-    controller:
-      replicas: 1
-      logLevel: info
-      appSync:
-        # Default sync interval (3 min for drift detection)
-        sync_interval: 180
-
-    # --------------------------------------------------------------------------
-    # Repo server
-    # --------------------------------------------------------------------------
-    repoServer:
-      replicas: 1
-      autoscaling:
-        enabled: false
-      resources:
-        requests:
-          cpu: 100m
-          memory: 128Mi
-        limits:
-          cpu: 500m
-          memory: 256Mi
-
-    # --------------------------------------------------------------------------
-    # Redis
-    # --------------------------------------------------------------------------
-    redis:
-      enabled: true
-      resources:
-        requests:
-          cpu: 100m
-          memory: 64Mi
-        limits:
-          cpu: 200m
-          memory: 128Mi
-
-    # --------------------------------------------------------------------------
-    # Application controller
-    # --------------------------------------------------------------------------
-    applicationController:
-      replicas: 1
-      resources:
-        requests:
-          cpu: 100m
-          memory: 256Mi
-        limits:
-          cpu: 500m
-          memory: 512Mi
-    EOT
+    templatefile("${path.module}/values.yaml.tftpl", {
+      domain        = var.argocd_domain != "" ? var.argocd_domain : "argocd.${var.cluster_name}.svc.cluster.local"
+      ingress_class = "nginx"
+      admin_user    = var.admin_user
+      git_repo_url  = var.git_repo_url
+      git_repo_name = var.git_repo_name
+      oauth_enabled = var.oauth_enabled
+      oauth_client_id     = var.oauth_client_id
+      oauth_client_secret = var.oauth_client_secret
+      oauth_org           = var.oauth_org
+    })
   ]
 
   # Don't recreate if values change — allow in-place upgrade

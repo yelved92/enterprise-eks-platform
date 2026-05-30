@@ -160,4 +160,24 @@ variable "argocd_domain" {
   default     = ""
 }
 
+variable "argocd_oauth_enabled" {
+  description = "Enable GitHub OAuth SSO for ArgoCD"
+  type        = bool
+  default     = false
+}
+
+variable "argocd_oauth_client_id" {
+  description = "GitHub OAuth App Client ID"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "argocd_oauth_client_secret" {
+  description = "GitHub OAuth App Client Secret"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 

@@ -340,6 +340,11 @@ module "argocd" {
   admin_user    = var.argocd_admin_user
   argocd_domain = var.argocd_domain
 
+  oauth_enabled      = var.argocd_oauth_enabled
+  oauth_client_id    = var.argocd_oauth_client_id
+  oauth_client_secret = var.argocd_oauth_client_secret
+  oauth_org          = ""
+
   tags = var.tags
 }
 
