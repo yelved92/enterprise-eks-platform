@@ -31,26 +31,36 @@ resource "helm_release" "argocd" {
   cleanup_on_fail  = true
 
   values = [
-    # Core values — kept minimal for Phase 4A (no public ingress, no TLS)
+    # Core values — NLB + ingress enabled when argocd_domain is set
     <<-EOT
     # --------------------------------------------------------------------------
     # Global settings
     # --------------------------------------------------------------------------
     global:
-      domain: argocd.${var.cluster_name}.svc.cluster.local
+      domain: ${var.argocd_domain != "" ? var.argocd_domain : "argocd.${var.cluster_name}.svc.cluster.local"}
 
     # --------------------------------------------------------------------------
     # Server (ArgoCD API + UI)
     # --------------------------------------------------------------------------
     server:
-      # ClusterIP only — no public exposure in Phase 4A
       service:
         type: ClusterIP
         port: 443
 
-      # Ingress disabled — we use "kubectl port-forward" or internal access
+      # Ingress enabled when domain is set — routed through nginx-ingress
       ingress:
-        enabled: false
+        enabled: ${var.argocd_domain != "" ? true : false}
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+          kubernetes.io/tls-acme: "true"
+        labels: {}
+        ingressClassName: nginx
+        hosts:
+          - ${var.argocd_domain}
+        tls:
+          - hosts:
+              - ${var.argocd_domain}
+            secretName: argocd-server-tls
 
       # RBAC via configmap (no SSO yet)
       rbacConfig:
@@ -138,6 +148,18 @@ resource "helm_release" "argocd" {
   depends_on = [
     kubernetes_namespace_v1.argocd
   ]
+}
+
+# ------------------------------------------------------------------------------
+# NLB hostname output — read the NLB DNS name after creation for reference
+# ------------------------------------------------------------------------------
+data "kubernetes_service" "argocd_server" {
+  metadata {
+    name      = "argocd-server"
+    namespace = var.namespace
+  }
+
+  depends_on = [helm_release.argocd]
 }
 
 # ------------------------------------------------------------------------------

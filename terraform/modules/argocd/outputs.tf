@@ -26,3 +26,8 @@ output "argocd_admin_password_command" {
   description = "Command to retrieve the initial admin password from the auto-created secret"
   value       = "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"
 }
+
+output "argocd_nlb_hostname" {
+  description = "NLB DNS hostname for ArgoCD (use this with nip.io)"
+  value       = var.argocd_domain != "" ? var.argocd_domain : try(data.kubernetes_service.argocd_server.status[0].load_balancer[0].ingress[0].hostname, null)
+}

@@ -36,6 +36,12 @@ variable "admin_user" {
   default     = "admin"
 }
 
+variable "argocd_domain" {
+  description = "External domain for ArgoCD (e.g., argocd.IP.nip.io). Enables NLB + ingress when set."
+  type        = string
+  default     = ""
+}
+
 variable "tags" {
   description = "Additional tags for resources"
   type        = map(string)

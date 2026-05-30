@@ -6,6 +6,7 @@ terraform/**/terraform.tfstate.backup
 *.tfstate
 *.tfstate.backup
 *.tfvars
+*.tfvars.local
 *.auto.tfvars
 crash.log
 **/tfplan

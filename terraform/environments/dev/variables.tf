@@ -154,4 +154,10 @@ variable "argocd_admin_user" {
   default     = "yelved92"
 }
 
+variable "argocd_domain" {
+  description = "External domain for ArgoCD UI (e.g., argocd.IP.nip.io). Empty = ClusterIP only."
+  type        = string
+  default     = ""
+}
+
 

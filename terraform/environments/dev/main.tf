@@ -338,6 +338,7 @@ module "argocd" {
   git_repo_url  = var.argocd_git_repo_url
   git_repo_name = var.argocd_git_repo_name
   admin_user    = var.argocd_admin_user
+  argocd_domain = var.argocd_domain
 
   tags = var.tags
 }
