@@ -60,6 +60,9 @@ components:
 
   accountingService:
     enabled: true
+    resources:
+      limits:
+        memory: 128Mi
 
   # Disable load generator (not needed for validation)
   loadgenerator:
