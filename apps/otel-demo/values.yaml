@@ -17,94 +17,49 @@ components:
   # Frontend (keep enabled — this is the demo UI)
   frontend:
     enabled: true
-    resources:
-      limits:
-        memory: 128Mi
 
   frontendProxy:
     enabled: true
-    resources:
-      limits:
-        memory: 48Mi
 
   # Core demo services
   adService:
     enabled: true
-    resources:
-      limits:
-        memory: 64Mi
 
   cartService:
     enabled: true
-    resources:
-      limits:
-        memory: 80Mi
 
   checkoutService:
     enabled: true
-    resources:
-      limits:
-        memory: 20Mi
 
   currencyService:
     enabled: true
-    resources:
-      limits:
-        memory: 20Mi
 
   emailService:
     enabled: true
-    resources:
-      limits:
-        memory: 48Mi
 
   paymentService:
     enabled: true
-    resources:
-      limits:
-        memory: 64Mi
 
   productCatalogService:
     enabled: true
-    resources:
-      limits:
-        memory: 20Mi
 
   quoteService:
     enabled: true
-    resources:
-      limits:
-        memory: 32Mi
 
   recommendationService:
     enabled: true
-    resources:
-      limits:
-        memory: 128Mi
 
   shippingService:
     enabled: true
-    resources:
-      limits:
-        memory: 20Mi
 
   frauddetectionService:
     enabled: true
-    resources:
-      limits:
-        memory: 64Mi
 
   imageprovider:
     enabled: true
-    resources:
-      limits:
-        memory: 48Mi
 
   accountingService:
     enabled: true
-    resources:
-      limits:
-        memory: 48Mi
 
   # Disable load generator (not needed for validation)
   loadgenerator:
@@ -123,9 +78,19 @@ components:
 # -- OpenTelemetry Collector
 opentelemetry-collector:
   enabled: true
-  resources:
-    limits:
-      memory: 128Mi
+
+# -- Disable observability infrastructure (we deploy our own in Phase 7)
+jaeger:
+  enabled: false
+
+prometheus:
+  enabled: false
+
+grafana:
+  enabled: false
+
+opensearch:
+  enabled: false
 
 # -- Disable observability infrastructure (we deploy our own in Phase 7)
 jaeger:
