@@ -1,0 +1,66 @@
+# Custom values overrides for OpenTelemetry Demo
+# This file is version-controlled in our repo (Hybrid GitOps approach)
+#
+# Upstream values: https://github.com/open-telemetry/opentelemetry-demo/blob/main/kubernetes/helm-chart/values.yaml
+# 
+# This file overrides specific values from upstream for our environment.
+
+# -- Global settings
+global:
+  # Reduce resource consumption for dev environment
+  storageClassName: gp2
+
+# -- Replica counts (reduce for dev)
+replicaCount: 1
+
+# -- Resource limits (reduce for dev)
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# -- Disable optional features for faster deployment in dev
+features:
+  # Disable load generator (not needed for validation)
+  loadgenerator: false
+  
+  # Disable optional components to speed up deployment
+  kafka: false
+  zookeeper: false
+  jaeger: false
+  grafana: false
+  prometheus: false
+
+# -- Enable only core demo services
+components:
+  # Core services
+  frontend: true
+  productCatalog: true
+  recommendation: true
+  cart: true
+  checkout: true
+  currency: true
+  payment: true
+  shipping: true
+  ad: true
+  
+  # Disable optional UI components
+  traceGen: false
+  loadGenerator: false
+
+# -- Ingress configuration (if needed)
+ingress:
+  enabled: false
+  # hostname: otel-demo.52.6.201.161.nip.io
+  # annotations:
+  #   kubernetes.io/ingress.class: nginx
+  #   cert-manager.io/cluster-issuer: letsencrypt-prod
+
+# -- Image tags (pin for reproducibility)
+images:
+  # Override specific image tags here if needed
+  # frontend:
+  #   tag: "v1.0.0"
