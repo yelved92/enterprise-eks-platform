@@ -13,15 +13,16 @@ spec:
   # Source 1 = Upstream OpenTelemetry Demo Helm chart
   # Source 2 = Our custom values overrides (version-controlled)
   sources:
-    # Source 1: Upstream OpenTelemetry Demo (official repo)
     - repoURL: https://github.com/open-telemetry/opentelemetry-demo.git
-      targetRevision: main  # ← Points to upstream main
+      targetRevision: main
       ref: upstream
-    
-    # Source 2: Our custom values (our feature branch)
     - repoURL: https://github.com/yelved92/enterprise-eks-platform.git
       targetRevision: feat/phase-4-argocd  # ← Points to our feature branch
       path: apps/otel-demo
+      helm:
+        valueFiles:
+          - $upstream/kubernetes/helm-chart/values.yaml
+          - values.yaml  # Our custom overrides
   
   destination:
     server: https://kubernetes.default.svc
