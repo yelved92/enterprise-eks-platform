@@ -122,6 +122,78 @@ echo "URL: https://argocd.$(curl -s ifconfig.me).nip.io"
 | GitHub login says "not in org" | Verify your GitHub account is member of `yelved-org` |
 | nip.io not resolving | Use NLB hostname directly: `https://<NLB_HOSTNAME>` |
 | ArgoCD admin password needed | `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' \| base64 -d` |
+| **ArgoCD unreachable (NLB replaced)** | See [NLB Recreation Recovery](#nlb-recreation-recovery) below |
+
+---
+
+## NLB Recreation Recovery
+
+Use this when the nginx-ingress NLB is deleted or replaced (e.g., deleting the LoadBalancer Service, or when ArgoCD was previously working through a rogue/leftover NLB that got cleaned up).
+
+### Symptoms
+- `https://argocd.<IP>.nip.io` times out (`ERR_CONNECTION_TIMED_OUT`)
+- curl returns `HTTP 000`
+- nginx pods are healthy but new NLB IPs don't match the nip.io domain
+
+### Root Cause
+The `nip.io` domain hardcodes a specific IP (e.g., `argocd.52.6.201.161.nip.io`). If the NLB is replaced, the IP changes and the old domain no longer resolves to the new NLB.
+
+### Recovery Steps
+
+```bash
+# 1. Get the new NLB DNS name
+NLB=$(kubectl get svc -n ingress-nginx nginx-ingress-ingress-nginx-controller \
+  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+echo "New NLB: $NLB"
+
+# 2. Get the new NLB IPs
+nslookup $NLB
+
+# 3. Pick a working IP and update the domain in Terraform vars
+# Edit terraform/environments/dev/local.auto.tfvars:
+#   argocd_domain = "argocd.<NEW_IP>.nip.io"
+
+# 4. Apply the change
+cd terraform/environments/dev
+terraform apply -auto-approve
+
+# 5. If preserve_client_ip.enabled=true and NLB was recreated,
+#    the private subnet NACL may need an outbound ephemeral port rule
+#    (This is standard for internet-facing workloads with preserve_client_ip):
+aws ec2 create-network-acl-entry --region us-east-1 \
+  --network-acl-id <PRIVATE_SUBNET_NACL_ID> \
+  --rule-number 215 \
+  --protocol tcp \
+  --port-range From=1024,To=65535 \
+  --cidr-block 0.0.0.0/0 \
+  --egress \
+  --rule-action allow
+
+# 6. Restart Dex to pick up new domain
+kubectl rollout restart deployment argocd-dex-server -n argocd
+kubectl rollout restart deployment argocd-server -n argocd
+
+# 7. Update GitHub OAuth App callback URL
+#    Go to: https://github.com/settings/developers
+#    Update "Authorization callback URL" to:
+#    https://argocd.<NEW_IP>.nip.io/api/dex/callback
+#    Click "Update application"
+
+# 8. Wait for Let's Encrypt cert (~2-3 min)
+kubectl get certificate -n argocd -w
+# Expected: Ready=True
+
+# 9. Verify access
+curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
+  https://argocd.<NEW_IP>.nip.io/ --connect-timeout 10
+# Expected: 200 or 302
+```
+
+### NACL Context
+With `preserve_client_ip.enabled=true`, the NLB preserves the original client IP. Response traffic from worker nodes flows back through the NAT Gateway. The private subnet's **outbound NACL** must allow ephemeral ports (1024-65535) to `0.0.0.0/0` for responses to reach the client. This is standard and safe for internet-facing workloads.
+
+### GitHub OAuth Note
+After changing the domain, the GitHub OAuth App must be updated manually — there's no API to automate this. The callback URL must exactly match `https://argocd.<NEW_IP>.nip.io/api/dex/callback`.
 
 ---
 

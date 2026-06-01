@@ -105,22 +105,24 @@
 - Namespace fixed to `opentelemetry-demo`
 - **Files ready for commit to `feat/phase-4-argocd`** — waiting for user to push and sync
 
-## 2026-06-01 — Session 13: NLB Recovery + OTel Demo Ready for Sync 🔧
+## 2026-06-01 — Session 14: Phase 4C — OTel Demo Deployed & Running ✅🚀
 
-### NLB Recovery
-- **Root cause:** Found rogue NLB (`a847d7...`) tagged `argocd/argocd-server` was actually handling ArgoCD traffic, not the nginx NLB. Deleting it broke the nip.io domain since `52.6.201.161` was the rogue NLB's IP.
-- Deleted rogue NLB + recreated nginx-ingress Service → new NLB with fresh IPs
-- **NACL fix:** Added outbound ephemeral port rule (1024-65535) to the private subnet NACL — required for `preserve_client_ip.enabled=true` where response traffic flows back through NAT Gateway with client's source IP
-- Updated `argocd_domain` in `local.auto.tfvars` from `argocd.52.6.201.161.nip.io` → `argocd.3.224.67.220.nip.io`
-- Re-ran `terraform apply` to update Ingress hostname
-- Restarted Dex + ArgoCD server to pick up new domain
-- Updated GitHub OAuth App callback URL to match new domain
-- **ArgoCD UI back online:** ✅ `https://argocd.3.224.67.220.nip.io` with GitHub OAuth working
-- **Doc update:** Added "NLB Recreation Recovery" section to `runbooks/restore-plan.md`
+### OTel Demo Deployment
+- **18 pods running** across `opentelemetry-demo` namespace — all core demo services operational
+- Frontend, productCatalog, recommendation, cart, checkout, currency, payment, shipping, ad + Kafka, Valkey, Collector
+- Load generator, Flagd disabled (not needed for validation)
+- **Live fixes:**
+  - Removed invalid `deployment`/`ingress` root-level keys (chart schema validation)
+  - Removed custom resource overrides (caused OOMKills — upstream defaults are fine)
+  - Re-enabled Kafka + Valkey (services depend on them via initContainers)
+  - Set `accountingService` memory limit to 128Mi (upstream 50Mi was too low)
+- **Hybrid GitOps validated:** Helm chart from OTel repo + values from our git repo ✅
 
-### Phase 4C Status
-- OTel Demo Application definition ready in repo
-- Still needs: `git push` + ArgoCD sync to deploy
+### Drift Detection Test (Step 4.12)
+- **Label drift:** Added `test-drift=true` label — controller detected it but labels alone don't trigger sync
+- **Spec drift:** Scaled frontend from 1→3 replicas → ArgoCD autosync self-healed back to 1 within seconds ✅
+- Controller logs confirm: "Skipping auto-sync" for label-only changes, full reconciliation for spec changes
+- **Phase 4 fully complete** — app-of-apps, TLS, OAuth, hybrid GitOps, drift detection all validated
 
-## Next: Phase 4C — Steps 4.11-4.12: Push, sync, validate OTel Demo, drift detection
+## Next: Phase 5 — Security Hardening
 

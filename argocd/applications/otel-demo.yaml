@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.34.0/standalone-strict/all.json
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

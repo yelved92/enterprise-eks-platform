@@ -1,6 +1,6 @@
 # Project State
 
-**Current Phase:** Phase 4 — GitOps with ArgoCD + Secure Access (In Progress)
+**Current Phase:** Phase 4 — GitOps with ArgoCD + Secure Access (Complete ✅)
 
 ## Completed Phases
 
@@ -11,6 +11,8 @@
 | 2 | Terraform base networking (VPC, 9 subnets, IGW, NAT, 5 SGs, 2 NACLs, KMS, IAM, 7 VPC endpoints) | ✅ Deployed |
 | 3 | EKS cluster (1.34, private, KMS, t3.medium ×3, on-demand, IRSA, EBS CSI), after refactor (ADR-007, ADR-008) | ✅ Deployed & Validated |
 | 4A | ArgoCD v2.8.3 deployed via Terraform Helm provider, 7 pods running, RBAC configured, Git repo registered | ✅ Deployed |
+| 4B | TLS (cert-manager + Let's Encrypt), GitHub OAuth SSO, nginx-ingress NLB | ✅ Complete |
+| 4C | OTel Demo deployed via Hybrid GitOps (18 pods), drift detection validated | ✅ Complete |
 
 ## Infrastructure Deployed (~125 resources)
 
@@ -50,30 +52,23 @@
 - [x] **4.8c** Disabled admin password login — GitHub OAuth is the only auth method
 
 ### Phase 4C: GitOps Validation with Real Workload (Hybrid Approach)
-- [ ] **4.10** Deploy OpenTelemetry Demo via ArgoCD (first child app)
+- [x] **4.10** Deploy OpenTelemetry Demo via ArgoCD (first child app)
   - **Approach:** Hybrid (multi-source ArgoCD Application)
-  - **Upstream source:** Official OpenTelemetry Demo Helm chart (`https://github.com/open-telemetry/opentelemetry-demo.git`)
+  - **Upstream source:** Official OpenTelemetry Demo Helm chart from Helm repo (pinned v0.32.0)
   - **Local source:** Custom `values.yaml` overrides in our repo (`apps/otel-demo/`)
-  - **Benefits:** Version-controlled customizations, can pin upstream versions, true GitOps
-- [ ] **4.11** Validate: app sync, health checks, ingress, drift detection
-- [ ] **4.12** Test manual change → drift → reconciliation cycle
+  - **Status:** 18 pods Running, Synced + Healthy in ArgoCD UI
+- [x] **4.11** Validate: app sync, health checks, drift detection
+- [x] **4.12** Test manual change → drift → reconciliation cycle (scale self-healed ✅)
 
 ### Phase 4 Deliverables
 - [x] ArgoCD running with OAuth (no admin password sharing)
 - [x] cert-manager issuing trusted TLS certificates
-- [x] ArgoCD UI accessible via `https://argocd.52.6.201.161.nip.io`
-- [ ] OTel Demo deployed via Hybrid GitOps approach (upstream chart + local overrides)
-- [ ] GitOps workflow validated end-to-end (sync, health, drift detection)
-
----
-
-### Phase 4C: GitOps Validation with Real Workload (Hybrid Approach)
-- [x] **4.10** Deploy OpenTelemetry Demo via ArgoCD (first child app)
-- [ ] **4.11** Validate: app sync, health checks, ingress, drift detection
-- [ ] **4.12** Test manual change → drift → reconciliation cycle
+- [x] ArgoCD UI accessible via `https://argocd.3.224.67.220.nip.io`
+- [x] OTel Demo deployed via Hybrid GitOps approach (upstream chart + local overrides)
+- [x] GitOps workflow validated end-to-end (sync, health, drift detection)
 
 ## Next Action
-**Phase 4C — Steps 4.11-4.12: Validate sync, health checks, drift detection**
+**Phase 5 — Security Hardening (Kyverno, Falco, External Secrets, Network Policies)**
 ## Key Technical Debt
 - Cluster SG attached to EKS instead of node SG (fix at Blue/Green)
 - VPC endpoints cost ~$43/mo in dev (add per-endpoint flag)
