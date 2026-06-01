@@ -67,8 +67,13 @@
 
 ---
 
+### Phase 4C: GitOps Validation with Real Workload (Hybrid Approach)
+- [x] **4.10** Deploy OpenTelemetry Demo via ArgoCD (first child app)
+- [ ] **4.11** Validate: app sync, health checks, ingress, drift detection
+- [ ] **4.12** Test manual change → drift → reconciliation cycle
+
 ## Next Action
-**Phase 4C — Step 4.10: Deploy OpenTelemetry Demo via ArgoCD as first GitOps workload**
+**Phase 4C — Steps 4.11-4.12: Validate sync, health checks, drift detection**
 ## Key Technical Debt
 - Cluster SG attached to EKS instead of node SG (fix at Blue/Green)
 - VPC endpoints cost ~$43/mo in dev (add per-endpoint flag)

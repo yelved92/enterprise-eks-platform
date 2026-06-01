@@ -1,66 +1,149 @@
-# Custom values overrides for OpenTelemetry Demo
-# This file is version-controlled in our repo (Hybrid GitOps approach)
+# -----------------------------------------------------------------------------
+# OpenTelemetry Demo — Custom Values Overrides
+# -----------------------------------------------------------------------------
+# Hybrid GitOps approach:
+# - Upstream chart: https://open-telemetry.github.io/opentelemetry-helm-charts
+# - Downstream overrides: this file (version-controlled in our repo)
 #
-# Upstream values: https://github.com/open-telemetry/opentelemetry-demo/blob/main/kubernetes/helm-chart/values.yaml
-# 
-# This file overrides specific values from upstream for our environment.
+# This overrides specific upstream values for our dev environment.
+# See the full upstream schema at:
+#   https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-demo/values.yaml
+# -----------------------------------------------------------------------------
 
-# -- Global settings
-global:
-  # Reduce resource consumption for dev environment
-  storageClassName: gp2
+# -- Global environment variables applied to all components
+default:
+  env:
+    - name: OTEL_COLLECTOR_NAME
+      value: opentelemetry-demo-otel-collector
 
-# -- Replica counts (reduce for dev)
-replicaCount: 1
+# -- OpenTelemetry Collector configuration
+opentelemetry-collector:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
 
-# -- Resource limits (reduce for dev)
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 250m
-    memory: 256Mi
+# -- Individual service settings
+# Enable only core demo services; disable optional components
+# to speed up deployment in dev and reduce resource consumption
+deployment:
+  # Core frontend
+  frontend:
+    enabled: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 150m
+        memory: 192Mi
 
-# -- Disable optional features for faster deployment in dev
-features:
-  # Disable load generator (not needed for validation)
-  loadgenerator: false
-  
-  # Disable optional components to speed up deployment
-  kafka: false
-  zookeeper: false
-  jaeger: false
-  grafana: false
-  prometheus: false
+  productCatalog:
+    enabled: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 150m
+        memory: 192Mi
 
-# -- Enable only core demo services
-components:
-  # Core services
-  frontend: true
-  productCatalog: true
-  recommendation: true
-  cart: true
-  checkout: true
-  currency: true
-  payment: true
-  shipping: true
-  ad: true
-  
-  # Disable optional UI components
-  traceGen: false
-  loadGenerator: false
+  recommendation:
+    enabled: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 150m
+        memory: 192Mi
 
-# -- Ingress configuration (if needed)
+  cart:
+    enabled: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 150m
+        memory: 192Mi
+
+  checkout:
+    enabled: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 150m
+        memory: 192Mi
+
+  currency:
+    enabled: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 150m
+        memory: 192Mi
+
+  payment:
+    enabled: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 150m
+        memory: 192Mi
+
+  shipping:
+    enabled: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 150m
+        memory: 192Mi
+
+  ad:
+    enabled: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 150m
+        memory: 192Mi
+
+  # Disable optional components for faster dev deployment
+  loadGenerator:
+    enabled: false
+
+  imageProvider:
+    enabled: false
+
+  kafka:
+    enabled: false
+
+  flagd:
+    enabled: false
+
+# -- Ingress (disabled for now; can enable to expose the demo frontend)
 ingress:
   enabled: false
-  # hostname: otel-demo.52.6.201.161.nip.io
-  # annotations:
-  #   kubernetes.io/ingress.class: nginx
-  #   cert-manager.io/cluster-issuer: letsencrypt-prod
 
-# -- Image tags (pin for reproducibility)
-images:
-  # Override specific image tags here if needed
-  # frontend:
-  #   tag: "v1.0.0"
+# -- Grafana (disabled — we'll deploy our own observability stack in Phase 7)
+grafana:
+  enabled: false
+
+# -- Prometheus (disabled — will be deployed independently in Phase 7)
+prometheus:
+  enabled: false

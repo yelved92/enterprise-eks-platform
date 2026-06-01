@@ -8,31 +8,37 @@ metadata:
     app.kubernetes.io/name: opentelemetry-demo
 spec:
   project: platform
-  
-  # Hybrid Approach: Multi-source
-  # Source 1 = Upstream OpenTelemetry Demo Helm chart
+
+  # Hybrid Multi-Source Approach:
+  # Source 1 = Upstream OTel Demo Helm chart (official Helm repo)
   # Source 2 = Our custom values overrides (version-controlled)
   sources:
-    - repoURL: https://github.com/open-telemetry/opentelemetry-demo.git
-      targetRevision: main
-      ref: upstream
-    - repoURL: https://github.com/yelved92/enterprise-eks-platform.git
-      targetRevision: feat/phase-4-argocd  # ← Points to our feature branch
-      path: apps/otel-demo
+    - repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+      chart: opentelemetry-demo
+      targetRevision: 0.32.0
       helm:
         valueFiles:
-          - $upstream/kubernetes/helm-chart/values.yaml
-          - values.yaml  # Our custom overrides
-  
+          - $values/apps/otel-demo/values.yaml
+
+    - repoURL: https://github.com/yelved92/enterprise-eks-platform.git
+      targetRevision: feat/phase-4-argocd
+      ref: values
+
   destination:
     server: https://kubernetes.default.svc
-    namespace: otel-demo
-  
+    namespace: opentelemetry-demo
+
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
       - PrunePropagationPolicy=foreground
-      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

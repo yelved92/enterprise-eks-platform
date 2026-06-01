@@ -96,5 +96,14 @@
 - **Security hardening:** Attempted `loadBalancerSourceRanges` but chart doesn't render it; left `preserve_client_ip.enabled=true` as improvement
 - Git history cleaned (squashed commits with IP references)
 
-## Next: Phase 4C — Steps 4.10-4.12: OpenTelemetry Demo deployment & GitOps validation
+## 2026-06-01 — Session 12: Phase 4C — OTel Demo App Definition Created ✅
+- **Architecture decision:** Switched from git-based upstream (`github.com/open-telemetry/opentelemetry-demo.git`) to official Helm repo (`https://open-telemetry.github.io/opentelemetry-helm-charts`) with chart `opentelemetry-demo` pinned to 0.32.0
+- **Multi-source pattern:** Uses `$values` ref pattern — Helm chart from repo, values from our git repo
+- **`argocd/projects/platform.yaml`:** Added OTel Helm repo to `sourceRepos`
+- **`argocd/applications/otel-demo.yaml`:** Rewrote to use Helm repo + `$values/apps/otel-demo/values.yaml`
+- **`apps/otel-demo/values.yaml`:** Refreshed with proper upstream schema — per-service resource limits, only core services enabled, optional components (loadGenerator, kafka, flagd) disabled for lean dev deployment
+- Namespace fixed to `opentelemetry-demo`
+- **Files ready for commit to `feat/phase-4-argocd`** — waiting for user to push and sync
+
+## Next: Phase 4C — Steps 4.11-4.12: Validate sync, health, drift detection
 
