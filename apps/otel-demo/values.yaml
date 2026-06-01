@@ -69,12 +69,6 @@ components:
   flagd:
     enabled: false
 
-  # Disable Kafka + Valkey (heavy infrastructure — not needed for core demo)
-  kafka:
-    enabled: false
-  valkey:
-    enabled: false
-
 # -- OpenTelemetry Collector
 opentelemetry-collector:
   enabled: true
