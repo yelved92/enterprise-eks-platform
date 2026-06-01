@@ -74,14 +74,14 @@ This project is implemented incrementally:
 
 | Phase | Component | Status |
 |-------|-----------|--------|
-| 1 | Project Initialization | ✅ In Progress |
-| 2 | Terraform Base Networking | ⏳ Pending |
-| 3 | EKS Cluster Deployment | ⏳ Pending |
-| 4 | GitOps with ArgoCD | ⏳ Pending |
+| 1 | Project Initialization | ✅ Complete |
+| 2 | Terraform Base Networking | ✅ Deployed |
+| 3 | EKS Cluster Deployment | ✅ Deployed & Validated |
+| 4 | GitOps with ArgoCD + OAuth SSO | 🔄 In Progress (Phase 4C) |
 | 5 | Security Hardening | ⏳ Pending |
 | 6 | Service Mesh (Istio) | ⏳ Pending |
 | 7 | Observability Stack | ⏳ Pending |
-| 8 | Application Deployment | ⏳ Pending |
+| 8 | Application Deployment (OTel Demo) | 🔄 In Progress |
 | 9 | CI/CD Pipelines | ⏳ Pending |
 | 10 | Disaster Recovery | ⏳ Pending |
 | 11 | Advanced Topics | ⏳ Pending |

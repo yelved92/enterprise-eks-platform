@@ -39,8 +39,12 @@
 - [ ] **4.8** Create GitHub OAuth App + configure ArgoCD Dex SSO
 - [ ] **4.9** Validate: GitHub login → ArgoCD UI → RBAC mapping
 
-#### Phase 4C: GitOps Validation with Real Workload
+#### Phase 4C: GitOps Validation with Real Workload (Hybrid Approach)
 - [ ] **4.10** Deploy OpenTelemetry Demo via ArgoCD (first child app)
+  - **Approach:** Hybrid (multi-source ArgoCD Application)
+  - **Upstream source:** Official OpenTelemetry Demo Helm chart (`https://github.com/open-telemetry/opentelemetry-demo.git`)
+  - **Local source:** Custom `values.yaml` overrides in our repo (`apps/otel-demo/`)
+  - **Benefits:** Version-controlled customizations, can pin upstream versions, true GitOps
 - [ ] **4.11** Validate: app sync, health checks, ingress, drift detection
 - [ ] **4.12** Test manual change → drift → reconciliation cycle
 

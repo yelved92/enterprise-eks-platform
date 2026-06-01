@@ -49,8 +49,12 @@
 - [x] **4.8b** Restricted login to `yelved-org` GitHub org — only org members can log in
 - [x] **4.8c** Disabled admin password login — GitHub OAuth is the only auth method
 
-### Phase 4C: GitOps Validation with Real Workload
+### Phase 4C: GitOps Validation with Real Workload (Hybrid Approach)
 - [ ] **4.10** Deploy OpenTelemetry Demo via ArgoCD (first child app)
+  - **Approach:** Hybrid (multi-source ArgoCD Application)
+  - **Upstream source:** Official OpenTelemetry Demo Helm chart (`https://github.com/open-telemetry/opentelemetry-demo.git`)
+  - **Local source:** Custom `values.yaml` overrides in our repo (`apps/otel-demo/`)
+  - **Benefits:** Version-controlled customizations, can pin upstream versions, true GitOps
 - [ ] **4.11** Validate: app sync, health checks, ingress, drift detection
 - [ ] **4.12** Test manual change → drift → reconciliation cycle
 
@@ -58,8 +62,8 @@
 - [x] ArgoCD running with OAuth (no admin password sharing)
 - [x] cert-manager issuing trusted TLS certificates
 - [x] ArgoCD UI accessible via `https://argocd.52.6.201.161.nip.io`
-- [ ] OTel Demo deployed (accessible via kubectl port-forward or internal)
-- [ ] GitOps workflow validated end-to-end
+- [ ] OTel Demo deployed via Hybrid GitOps approach (upstream chart + local overrides)
+- [ ] GitOps workflow validated end-to-end (sync, health, drift detection)
 
 ---
 

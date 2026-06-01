@@ -14,10 +14,10 @@ spec:
   # Source 2 = Our custom values overrides (version-controlled)
   sources:
     - repoURL: https://github.com/open-telemetry/opentelemetry-demo.git
-      targetRevision: main
+      targetRevision: feat/phase-4-argocd
       ref: upstream
     - repoURL: https://github.com/yelved92/enterprise-eks-platform.git
-      targetRevision: main
+      targetRevision: feat/phase-4-argocd
       path: apps/otel-demo
       helm:
         valueFiles:

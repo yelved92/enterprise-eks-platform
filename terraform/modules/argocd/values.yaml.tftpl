@@ -52,6 +52,10 @@ configs:
           config:
             clientID: ${oauth_client_id}
             clientSecret: ${oauth_client_secret}
+            scopes:
+              - read:org
+              - read:user
+              - user:email
 %{ if oauth_org != "" }            orgs:
               - name: ${oauth_org}
 %{ endif }
