@@ -1,149 +1,141 @@
 # -----------------------------------------------------------------------------
 # OpenTelemetry Demo — Custom Values Overrides
 # -----------------------------------------------------------------------------
-# Hybrid GitOps approach:
-# - Upstream chart: https://open-telemetry.github.io/opentelemetry-helm-charts
-# - Downstream overrides: this file (version-controlled in our repo)
-#
-# This overrides specific upstream values for our dev environment.
-# See the full upstream schema at:
-#   https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-demo/values.yaml
+# Hybrid GitOps: overrides upstream chart values for dev environment.
+# Only values we want to override are included; everything else falls through
+# to upstream defaults.
 # -----------------------------------------------------------------------------
 
-# -- Global environment variables applied to all components
+# -- Global defaults applied to all components
 default:
-  env:
-    - name: OTEL_COLLECTOR_NAME
-      value: opentelemetry-demo-otel-collector
+  # Reduce replica count for dev
+  replicas: 1
 
-# -- OpenTelemetry Collector configuration
-opentelemetry-collector:
-  enabled: true
-  replicaCount: 1
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 250m
-      memory: 256Mi
-
-# -- Individual service settings
-# Enable only core demo services; disable optional components
-# to speed up deployment in dev and reduce resource consumption
-deployment:
-  # Core frontend
+# -- Component-level overrides
+# Disable optional/infrastructure services to reduce resource consumption in dev
+components:
+  # Frontend (keep enabled — this is the demo UI)
   frontend:
     enabled: true
     resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
       limits:
-        cpu: 150m
-        memory: 192Mi
+        memory: 128Mi
 
-  productCatalog:
+  frontendProxy:
     enabled: true
     resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
       limits:
-        cpu: 150m
-        memory: 192Mi
+        memory: 48Mi
 
-  recommendation:
+  # Core demo services
+  adService:
     enabled: true
     resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
       limits:
-        cpu: 150m
-        memory: 192Mi
+        memory: 64Mi
 
-  cart:
+  cartService:
     enabled: true
     resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
       limits:
-        cpu: 150m
-        memory: 192Mi
+        memory: 80Mi
 
-  checkout:
+  checkoutService:
     enabled: true
     resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
       limits:
-        cpu: 150m
-        memory: 192Mi
+        memory: 20Mi
 
-  currency:
+  currencyService:
     enabled: true
     resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
       limits:
-        cpu: 150m
-        memory: 192Mi
+        memory: 20Mi
 
-  payment:
+  emailService:
     enabled: true
     resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
       limits:
-        cpu: 150m
-        memory: 192Mi
+        memory: 48Mi
 
-  shipping:
+  paymentService:
     enabled: true
     resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
       limits:
-        cpu: 150m
-        memory: 192Mi
+        memory: 64Mi
 
-  ad:
+  productCatalogService:
     enabled: true
     resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
       limits:
-        cpu: 150m
-        memory: 192Mi
+        memory: 20Mi
 
-  # Disable optional components for faster dev deployment
-  loadGenerator:
+  quoteService:
+    enabled: true
+    resources:
+      limits:
+        memory: 32Mi
+
+  recommendationService:
+    enabled: true
+    resources:
+      limits:
+        memory: 128Mi
+
+  shippingService:
+    enabled: true
+    resources:
+      limits:
+        memory: 20Mi
+
+  frauddetectionService:
+    enabled: true
+    resources:
+      limits:
+        memory: 64Mi
+
+  imageprovider:
+    enabled: true
+    resources:
+      limits:
+        memory: 48Mi
+
+  accountingService:
+    enabled: true
+    resources:
+      limits:
+        memory: 48Mi
+
+  # Disable load generator (not needed for validation)
+  loadgenerator:
     enabled: false
 
-  imageProvider:
-    enabled: false
-
-  kafka:
-    enabled: false
-
+  # Disable Flagd (feature flags — optional)
   flagd:
     enabled: false
 
-# -- Ingress (disabled for now; can enable to expose the demo frontend)
-ingress:
+  # Disable Kafka + Valkey (heavy infrastructure — not needed for core demo)
+  kafka:
+    enabled: false
+  valkey:
+    enabled: false
+
+# -- OpenTelemetry Collector
+opentelemetry-collector:
+  enabled: true
+  resources:
+    limits:
+      memory: 128Mi
+
+# -- Disable observability infrastructure (we deploy our own in Phase 7)
+jaeger:
   enabled: false
 
-# -- Grafana (disabled — we'll deploy our own observability stack in Phase 7)
+prometheus:
+  enabled: false
+
 grafana:
   enabled: false
 
-# -- Prometheus (disabled — will be deployed independently in Phase 7)
-prometheus:
+opensearch:
   enabled: false
