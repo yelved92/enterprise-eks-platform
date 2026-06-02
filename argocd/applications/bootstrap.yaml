@@ -12,7 +12,7 @@ spec:
 
   source:
     repoURL: "https://github.com/yelved92/enterprise-eks-platform.git"
-    targetRevision: master
+    targetRevision: feat/phase-5-security
     path: argocd/applications
     directory:
       recurse: true
