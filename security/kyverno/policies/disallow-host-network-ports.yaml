@@ -1,0 +1,41 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-host-network-ports
+  annotations:
+    policies.kyverno.io/title: Disallow Host Network and Ports
+    policies.kyverno.io/category: Pod Security Standards (Baseline)
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Pods should not be allowed to access the host network or use host ports
+      as this can allow access to the node's network interfaces and bypass
+      network policies.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+    - name: host-network
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "Host network access is not allowed."
+        pattern:
+          spec:
+            =(hostNetwork): "false"
+    - name: host-ports
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "Host ports are not allowed. Use a Service instead."
+        pattern:
+          spec:
+            containers:
+              - =(hostPort): "0"
+            =(initContainers):
+              - =(hostPort): "0"

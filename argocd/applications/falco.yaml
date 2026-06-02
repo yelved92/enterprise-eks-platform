@@ -1,0 +1,68 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: falco
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: enterprise-eks-platform
+    app.kubernetes.io/component: security
+spec:
+  project: platform
+
+  source:
+    repoURL: https://falcosecurity.github.io/charts/
+    chart: falco
+    targetRevision: 3.4.0  # Pinned version for stability
+    helm:
+      values: |
+        # Falco configuration
+        falco:
+          # Log to stdout (Phase5 decision: no Slack/Discord integration yet)
+          stdout_output:
+            enabled: true
+          
+          # Disable file output
+          file_output:
+            enabled: false
+          
+          # Disable gRPC output
+          grpc_output:
+            enabled: false
+          
+          # Resource limits
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+        
+        # Deploy as DaemonSet (one pod per node)
+        daemonset:
+          enabled: true
+        
+        # Use eBPF probe (modern approach, no kernel module needed)
+        ebpf:
+          enabled: true
+        
+        # Disable Falco exporter (not needed for Phase5)
+        falcoExporter:
+          enabled: false
+        
+        # Disable Prometheus metrics (Phase5: no Prometheus yet)
+        prometheus:
+          enabled: false
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: falco
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground

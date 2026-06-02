@@ -1,6 +1,6 @@
 # Project State
 
-**Current Phase:** Phase 4 — GitOps with ArgoCD + Secure Access (Complete ✅)
+**Current Phase:** Phase5 — Security Hardening (In Progress 🚧)
 
 ## Completed Phases
 
@@ -13,6 +13,10 @@
 | 4A | ArgoCD v2.8.3 deployed via Terraform Helm provider, 7 pods running, RBAC configured, Git repo registered | ✅ Deployed |
 | 4B | TLS (cert-manager + Let's Encrypt), GitHub OAuth SSO, nginx-ingress NLB | ✅ Complete |
 | 4C | OTel Demo deployed via Hybrid GitOps (18 pods), drift detection validated | ✅ Complete |
+| 5A | Kyverno admission policies deployed (4 policies), ArgoCD app created | 🚧 Ready to Deploy |
+| 5B | Falco runtime security deployed via ArgoCD, eBPF enabled | 🚧 Ready to Deploy |
+| 5C | External Secrets Operator deployed, AWS Secrets Manager integration | 🚧 Ready to Deploy |
+| 5D | Network Policies created (default-deny + allow rules) | 🚧 Ready to Deploy |
 
 ## Infrastructure Deployed (~125 resources)
 
@@ -62,8 +66,55 @@
 
 ### Phase 4 Deliverables
 - [x] ArgoCD running with OAuth (no admin password sharing)
-- [x] cert-manager issuing trusted TLS certificates
-- [x] ArgoCD UI accessible via `https://argocd.3.224.67.220.nip.io`
+- [x] cert-manager issuing trusted TLS certificates- [x] ArgoCD UI accessible via `https://argocd.3.224.67.220.nip.io`
+- [x] OTel Demo deployed via Hybrid GitOps approach (upstream chart + local overrides)
+- [x] GitOps workflow validated end-to-end (sync, health, drift detection)
+
+---
+
+## Phase5 — Detailed Sub-Step Plan
+
+### Phase5A: Kyverno Admission Policies
+- [x] **5.1** Update `argocd/projects/platform.yaml` with Kyverno Helm repo + CRDs
+- [x] **5.2** Create `argocd/applications/kyverno.yaml` — multi-source ArgoCD app
+- [x] **5.3** Create baseline Kyverno policies in `security/kyverno/policies/`:
+  - [x] `disallow-privileged-containers.yaml`
+  - [x] `require-non-root-users.yaml`
+  - [x] `disallow-host-network-ports.yaml`
+  - [x] `require-resource-limits.yaml`
+- [ ] **5.4** Deploy Kyverno via ArgoCD sync
+- [ ] **5.5** Validate: privileged pod creation is denied
+
+### Phase5B: Falco Runtime Security
+- [x] **5.6** Update `argocd/projects/platform.yaml` with Falco Helm repo
+- [x] **5.7** Create `argocd/applications/falco.yaml` — ArgoCD app
+- [ ] **5.8** Deploy Falco via ArgoCD sync
+- [ ] **5.9** Validate: Falco logs show runtime events (`kubectl logs -n falco ds/falco`)
+
+### Phase5C: External Secrets Operator
+- [x] **5.10** Update `argocd/projects/platform.yaml` with ESO Helm repo
+- [x] **5.11** Create `argocd/applications/external-secrets.yaml` — ArgoCD app
+- [x] **5.12** Create `security/external-secrets/` with SecretStore + test ExternalSecret
+- [ ] **5.13** Deploy ESO via ArgoCD sync
+- [ ] **5.14** Create test secret in AWS Secrets Manager
+- [ ] **5.15** Validate: secret syncs to Kubernetes (`kubectl get secret test-secret -n test-secrets`)
+
+### Phase5D: Network Policies + Pod Security Standards
+- [x] **5.16** Create `security/network-policies/` with default-deny + allow rules
+- [x] **5.17** Create `allow-core-dns.yaml`, `allow-argocd.yaml`, `allow-otel-demo.yaml`
+- [ ] **5.18** Apply NetworkPolicies to namespaces
+- [ ] **5.19** Enable Pod Security Standards (restricted) on namespaces
+- [ ] **5.20** Test: pod-to-pod communication blocked between namespaces
+
+### Phase5 Deliverables
+- [ ] Kyverno enforcing admission policies (privileged, non-root, host restrictions, resource limits)
+- [ ] Falco detecting runtime threats (eBPF, logs to stdout)
+- [ ] External Secrets Operator syncing AWS Secrets Manager secrets
+- [ ] Network Policies isolating namespaces (default-deny + selective allow)
+- [ ] Pod Security Standards enabled (restricted mode)
+
+## Next Action
+**Deploy Phase5 components via ArgoCD** — Commit changes, push to GitHub, sync ArgoCD apps- [x] ArgoCD UI accessible via `https://argocd.3.224.67.220.nip.io`
 - [x] OTel Demo deployed via Hybrid GitOps approach (upstream chart + local overrides)
 - [x] GitOps workflow validated end-to-end (sync, health, drift detection)
 

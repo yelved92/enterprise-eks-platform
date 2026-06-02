@@ -1,0 +1,68 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-argocd
+  namespace: argocd
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow ingress-nginx to reach ArgoCD server
+    - from:
+        - namespaceSelector:
+            name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080  # ArgoCD server
+        - protocol: TCP
+          port: 8083  # ArgoCD server metrics
+    # Allow ArgoCD components to communicate internally
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8081
+        - protocol: TCP
+          port: 8083
+  egress:
+    # Allow ArgoCD to reach Kubernetes API
+    - to:
+        - namespaceSelector:
+            name: default
+          podSelector:
+            k8s-app: kubernetes
+      ports:
+        - protocol: TCP
+          port: 443
+    # Allow ArgoCD to reach Git repositories (HTTPS)
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+    # Allow ArgoCD to reach itself (for health checks)
+    - to:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8081
+        - protocol: TCP
+          port: 8083
+    # Allow DNS queries
+    - to:
+        - namespaceSelector:
+            name: kube-system
+          podSelector:
+            k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

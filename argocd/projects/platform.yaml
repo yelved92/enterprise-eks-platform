@@ -16,6 +16,10 @@ spec:
     - "https://charts.jetstack.io"
     - "https://kubernetes.github.io/ingress-nginx"
     - "https://open-telemetry.github.io/opentelemetry-helm-charts"
+    # Phase 5: Security Hardening tools
+    - "https://kyverno.github.io/kyverno/"
+    - "https://falcosecurity.github.io/charts/"
+    - "https://charts.external-secrets.io/"
   # Destinations: only this cluster, only platform-managed namespaces
   # cert-manager needs kube-system for leader election roles
   destinations:
@@ -34,6 +38,13 @@ spec:
     - namespace: istio-system
       server: "https://kubernetes.default.svc"
     - namespace: external-secrets
+      server: "https://kubernetes.default.svc"
+    # Phase5: Security Hardening tool namespaces
+    - namespace: kyverno
+      server: "https://kubernetes.default.svc"
+    - namespace: falco
+      server: "https://kubernetes.default.svc"
+    - namespace: test-secrets
       server: "https://kubernetes.default.svc"
 
   # Cluster-scoped resources required by platform components
@@ -64,6 +75,15 @@ spec:
       kind: Challenge
     - group: acme.cert-manager.io
       kind: Order
+    # Phase5: Kyverno CRDs
+    - group: kyverno.io
+      kind: ClusterPolicy
+    - group: kyverno.io
+      kind: Policy
+    - group: kyverno.io
+      kind: ClusterPolicyReport
+    - group: kyverno.io
+      kind: PolicyReport
 
   # Namespaced resources — allow everything for platform services
   namespaceResourceWhitelist:

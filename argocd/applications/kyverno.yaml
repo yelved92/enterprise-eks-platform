@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kyverno
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: enterprise-eks-platform
+    app.kubernetes.io/component: security
+spec:
+  project: platform
+
+  # Multi-source: Upstream Helm chart + local policies
+  sources:
+    # Source 1: Upstream Kyverno Helm chart
+    - repoURL: https://kyverno.github.io/kyverno/
+      chart: kyverno
+      targetRevision: 3.2.5  # Pinned version for stability
+      helm:
+        values: |
+          # Kyverno controller configuration
+          replicaCount: 1
+          
+          # Enable admission controller webhooks
+          admissionController:
+            replicas: 1
+            serviceMonitor: false  # Disable ServiceMonitor (Prometheus not yet installed)
+          
+          # Cleanup controller for policy reports
+          cleanupController:
+            enabled: true
+            replicas: 1
+          
+          # Reports controller for ClusterPolicyReports
+          reportsController:
+            enabled: true
+            replicas: 1
+          
+          # Pod security standards - will be applied via namespace labels
+          podSecurityStandard: baseline
+          
+          # Resource limits
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+    # Source 2: Local Git repo with custom Kyverno policies (applied as raw manifests)
+    - repoURL: https://github.com/yelved92/enterprise-eks-platform.git
+      targetRevision: feat/phase-5-security
+      path: security/kyverno/policies
+      directory:
+        recurse: true
+        include: "*.yaml"
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kyverno
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - RespectIgnoreDifferences=true

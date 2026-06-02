@@ -1,0 +1,65 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-otel-demo
+  namespace: opentelemetry-demo
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow ingress-nginx to reach OTel Demo frontend
+    - from:
+        - namespaceSelector:
+            name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080  # Frontend service
+    # Allow internal service-to-service communication
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 4317  # OTLP gRPC
+        - protocol: TCP
+          port: 4318  # OTLP HTTP
+        - protocol: TCP
+          port: 6379  # Valkey/Redis
+        - protocol: TCP
+          port: 9092  # Kafka
+  egress:
+    # Allow services to communicate with each other
+    - to:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 4317
+        - protocol: TCP
+          port: 4318
+        - protocol: TCP
+          port: 6379
+        - protocol: TCP
+          port: 9092
+    # Allow OTLP export to external endpoints (if configured)
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 4317
+        - protocol: TCP
+          port: 4318
+    # Allow DNS queries
+    - to:
+        - namespaceSelector:
+            name: kube-system
+          podSelector:
+            k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
