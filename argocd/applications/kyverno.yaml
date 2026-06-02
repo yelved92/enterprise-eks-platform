@@ -15,7 +15,7 @@ spec:
     # Source 1: Upstream Kyverno Helm chart
     - repoURL: https://kyverno.github.io/kyverno/
       chart: kyverno
-      targetRevision: 3.2.5  # Pinned version for stability
+      targetRevision: 3.1.6  # Stable version with correct CRD names
       helm:
         values: |
           # Kyverno controller configuration
@@ -43,6 +43,9 @@ spec:
           
           # Explicitly install CRDs
           installCRDs: true
+          
+          # Wait for CRDs to be ready before deploying controllers
+          webhookTimeout: 30
           
           # Resource limits
           resources:
