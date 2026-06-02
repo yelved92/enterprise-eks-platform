@@ -15,7 +15,7 @@ spec:
     # Source 1: Upstream Kyverno Helm chart
     - repoURL: https://kyverno.github.io/kyverno/
       chart: kyverno
-      targetRevision: 3.2.6  # Valid stable version
+      targetRevision: 3.3.3  # v3.x with correct CRD names
       helm:
         values: |
           # Kyverno controller configuration
