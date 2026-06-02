@@ -15,28 +15,17 @@ spec:
     # Source 1: Upstream Kyverno Helm chart
     - repoURL: https://kyverno.github.io/kyverno/
       chart: kyverno
-      targetRevision: 3.3.3  # v3.x with correct CRD names
+      targetRevision: 3.2.6  # Known stable version
       helm:
         values: |
           # Kyverno controller configuration
           replicaCount: 1
           
-          # Force correct image (fixes old image issue)
-          image:
-            tag: v3.3.3
-          
           # Enable admission controller webhooks
           admissionController:
             replicas: 1
-            image:
-              tag: v3.3.3
             tolerations:
               - operator: Exists
-          
-          # Disable ServiceMonitor (Prometheus not yet installed)
-          monitoring:
-            serviceMonitor:
-              enabled: false
           
           # Disable cleanup jobs (causing ImagePullBackOff)
           cleanup:
