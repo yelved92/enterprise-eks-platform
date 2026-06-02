@@ -21,9 +21,15 @@ spec:
           # Kyverno controller configuration
           replicaCount: 1
           
+          # Force correct image (fixes old image issue)
+          image:
+            tag: v3.3.3
+          
           # Enable admission controller webhooks
           admissionController:
             replicas: 1
+            image:
+              tag: v3.3.3
             tolerations:
               - operator: Exists
           
