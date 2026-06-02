@@ -24,24 +24,25 @@ spec:
           # Enable admission controller webhooks
           admissionController:
             replicas: 1
+            tolerations:
+              - operator: Exists
           
           # Disable ServiceMonitor (Prometheus not yet installed)
           monitoring:
             serviceMonitor:
               enabled: false
           
-          # Cleanup controller for policy reports
-          cleanupController:
-            enabled: true
-            replicas: 1
+          # Disable cleanup jobs (causing ImagePullBackOff)
+          cleanup:
+            enabled: false
           
           # Reports controller for ClusterPolicyReports
           reportsController:
             enabled: true
             replicas: 1
           
-          # Pod security standards - will be applied via namespace labels
-          podSecurityStandard: baseline
+          # Explicitly install CRDs
+          installCRDs: true
           
           # Resource limits
           resources:
