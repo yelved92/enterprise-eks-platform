@@ -24,7 +24,11 @@ spec:
           # Enable admission controller webhooks
           admissionController:
             replicas: 1
-            serviceMonitor: false  # Disable ServiceMonitor (Prometheus not yet installed)
+          
+          # Disable ServiceMonitor (Prometheus not yet installed)
+          monitoring:
+            serviceMonitor:
+              enabled: false
           
           # Cleanup controller for policy reports
           cleanupController:
