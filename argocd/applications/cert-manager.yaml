@@ -20,7 +20,7 @@ spec:
           replicaCount: 1
 
     - repoURL: "https://github.com/yelved92/enterprise-eks-platform.git"
-      targetRevision: feat/phase-4-argocd
+      targetRevision: master
       path: helm/cert-manager/templates
       directory:
         recurse: true

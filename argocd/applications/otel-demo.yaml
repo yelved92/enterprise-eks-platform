@@ -22,7 +22,7 @@ spec:
           - $values/apps/otel-demo/values.yaml
 
     - repoURL: https://github.com/yelved92/enterprise-eks-platform.git
-      targetRevision: feat/phase-4-argocd
+      targetRevision: master
       ref: values
 
   destination:
