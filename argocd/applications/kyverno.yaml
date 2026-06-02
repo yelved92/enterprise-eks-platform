@@ -41,7 +41,7 @@ spec:
             enabled: true
             replicas: 1
           
-          # Explicitly install CRDs
+          # Explicitly install CRDs (force recreation)
           installCRDs: true
           
           # Wait for CRDs to be ready before deploying controllers
