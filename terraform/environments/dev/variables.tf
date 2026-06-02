@@ -131,3 +131,53 @@ variable "tags" {
     ManagedBy   = "terraform"
   }
 }
+
+
+# ------------------------------------------------------------------------------
+# ArgoCD Variables (Phase 4)
+# ------------------------------------------------------------------------------
+
+variable "argocd_git_repo_url" {
+  description = "URL of the Git repository for ArgoCD to sync from"
+  type        = string
+}
+
+variable "argocd_git_repo_name" {
+  description = "Name/label for the Git repository in ArgoCD"
+  type        = string
+  default     = "enterprise-eks-platform"
+}
+
+variable "argocd_admin_user" {
+  description = "GitHub username or identity to grant ArgoCD admin access"
+  type        = string
+  default     = "yelved92"
+}
+
+variable "argocd_domain" {
+  description = "External domain for ArgoCD UI (e.g., argocd.IP.nip.io). Empty = ClusterIP only."
+  type        = string
+  default     = ""
+}
+
+variable "argocd_oauth_enabled" {
+  description = "Enable GitHub OAuth SSO for ArgoCD"
+  type        = bool
+  default     = false
+}
+
+variable "argocd_oauth_client_id" {
+  description = "GitHub OAuth App Client ID"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "argocd_oauth_client_secret" {
+  description = "GitHub OAuth App Client Secret"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+

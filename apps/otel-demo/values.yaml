@@ -1,0 +1,103 @@
+# -----------------------------------------------------------------------------
+# OpenTelemetry Demo — Custom Values Overrides
+# -----------------------------------------------------------------------------
+# Hybrid GitOps: overrides upstream chart values for dev environment.
+# Only values we want to override are included; everything else falls through
+# to upstream defaults.
+# -----------------------------------------------------------------------------
+
+# -- Global defaults applied to all components
+default:
+  # Reduce replica count for dev
+  replicas: 1
+
+# -- Component-level overrides
+# Disable optional/infrastructure services to reduce resource consumption in dev
+components:
+  # Frontend (keep enabled — this is the demo UI)
+  frontend:
+    enabled: true
+
+  frontendProxy:
+    enabled: true
+
+  # Core demo services
+  adService:
+    enabled: true
+
+  cartService:
+    enabled: true
+
+  checkoutService:
+    enabled: true
+
+  currencyService:
+    enabled: true
+
+  emailService:
+    enabled: true
+
+  paymentService:
+    enabled: true
+
+  productCatalogService:
+    enabled: true
+
+  quoteService:
+    enabled: true
+
+  recommendationService:
+    enabled: true
+
+  shippingService:
+    enabled: true
+
+  frauddetectionService:
+    enabled: true
+
+  imageprovider:
+    enabled: true
+
+  accountingService:
+    enabled: true
+    resources:
+      limits:
+        memory: 128Mi
+
+  # Disable load generator (not needed for validation)
+  loadgenerator:
+    enabled: false
+
+  # Disable Flagd (feature flags — optional)
+  flagd:
+    enabled: false
+
+# -- OpenTelemetry Collector
+opentelemetry-collector:
+  enabled: true
+
+# -- Disable observability infrastructure (we deploy our own in Phase 7)
+jaeger:
+  enabled: false
+
+prometheus:
+  enabled: false
+
+grafana:
+  enabled: false
+
+opensearch:
+  enabled: false
+
+# -- Disable observability infrastructure (we deploy our own in Phase 7)
+jaeger:
+  enabled: false
+
+prometheus:
+  enabled: false
+
+grafana:
+  enabled: false
+
+opensearch:
+  enabled: false
