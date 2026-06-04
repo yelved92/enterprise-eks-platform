@@ -2,7 +2,7 @@
 # Dev Environment - Main Configuration
 # =============================================================================
 # Wires together all Terraform modules for the dev environment.
-# Uses cost-optimized single NAT Gateway configuration for lab/dev.
+# Uses cost-optimized NAT Instance instead of NAT Gateway for lab/dev.
 # -----------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
@@ -14,6 +14,12 @@ locals {
     private_app  = ["10.0.32.0/21", "10.0.40.0/21", "10.0.48.0/21"]
     private_data = ["10.0.64.0/21", "10.0.72.0/21", "10.0.80.0/21"]
   }
+
+  # Flattened list of all private subnet CIDRs (for NAT Instance security group)
+  private_subnet_cidrs = flatten([
+    for type, cidrs in local.subnet_cidrs : cidrs
+    if type != "public"
+  ])
 }
 
 # ------------------------------------------------------------------------------
@@ -53,8 +59,9 @@ module "gateways" {
   name                = var.environment
   vpc_id              = module.vpc.vpc_id
   public_subnet_ids   = module.subnets.public_subnet_ids
-  single_nat_gateway  = var.single_nat_gateway
-  enable_nat_gateway  = true
+  public_subnet_id    = module.subnets.public_subnet_ids[0]
+  private_subnet_cidrs = local.private_subnet_cidrs
+  enable_nat_instance = true
   enable_igw          = true
   tags                = var.tags
 }
@@ -68,11 +75,10 @@ module "routing" {
   name                      = var.environment
   vpc_id                    = module.vpc.vpc_id
   igw_id                    = module.gateways.igw_id
-  nat_gateway_ids           = module.gateways.nat_gateway_ids
+  nat_instance_eni_id       = module.gateways.nat_instance_eni_id
   public_subnet_ids         = module.subnets.public_subnet_ids
   private_app_subnet_ids    = module.subnets.private_app_subnet_ids
   private_data_subnet_ids   = module.subnets.private_data_subnet_ids
-  single_nat_gateway        = var.single_nat_gateway
   create_private_route_tables = true
   tags                      = var.tags
 }
@@ -145,17 +151,18 @@ module "vpc_endpoints" {
   private_app_route_table_ids = module.routing.private_app_route_table_ids
   private_data_route_table_ids = module.routing.private_data_route_table_ids
   security_group_id          = module.security_groups.cluster_security_group_id
-    enable_s3_gateway_endpoint   = true
-  enable_s3_interface_endpoint  = true
+  enable_s3_gateway_endpoint      = true
   enable_dynamodb_gateway_endpoint = true
-  enable_ec2_endpoint           = true
-  enable_ecr_api_endpoint     = true
-  enable_ecr_dkr_endpoint     = true
-  enable_ssm_endpoint         = true
-  enable_kms_endpoint         = true
-  enable_logs_endpoint        = true
-  enable_sts_endpoint         = true
-  tags                        = var.tags
+  # Interface endpoints disabled for cost optimization (NAT Instance handles routing)
+  enable_s3_interface_endpoint  = false
+  enable_ec2_endpoint           = false
+  enable_ecr_api_endpoint       = false
+  enable_ecr_dkr_endpoint       = false
+  enable_ssm_endpoint           = false
+  enable_kms_endpoint           = false
+  enable_logs_endpoint          = false
+  enable_sts_endpoint           = false
+  tags                          = var.tags
 }
 
 # ------------------------------------------------------------------------------
@@ -227,6 +234,23 @@ module "node_group" {
   cluster_depends_on = [module.eks.cluster_id]
 
   tags = var.tags
+}
+
+# ------------------------------------------------------------------------------
+# Route53 Module — DNS for yelved.xyz
+# ------------------------------------------------------------------------------
+data "aws_lb" "nginx_nlb" {
+  name = "kong-kong-proxy"
+}
+
+module "route53" {
+  source = "../../modules/route53"
+
+  domain_name       = var.domain_name
+  environment       = var.environment
+  nginx_nlb_dns_name = data.aws_lb.nginx_nlb.dns_name
+  nginx_nlb_zone_id  = data.aws_lb.nginx_nlb.zone_id
+  tags              = var.tags
 }
 
 # ------------------------------------------------------------------------------
@@ -329,24 +353,6 @@ output "eks_node_group_name" {
 # depend on module.eks. That implicit dependency ensures this module runs
 # after the cluster exists.
 # ------------------------------------------------------------------------------
-
-module "argocd" {
-  source = "../../modules/argocd"
-
-  namespace     = "argocd"
-  cluster_name  = module.eks.cluster_name
-  git_repo_url  = var.argocd_git_repo_url
-  git_repo_name = var.argocd_git_repo_name
-  admin_user    = var.argocd_admin_user
-  argocd_domain = var.argocd_domain
-
-  oauth_enabled      = var.argocd_oauth_enabled
-  oauth_client_id    = var.argocd_oauth_client_id
-  oauth_client_secret = var.argocd_oauth_client_secret
-  oauth_org          = "yelved-org"
-
-  tags = var.tags
-}
 
 # ------------------------------------------------------------------------------
 # cert-manager, ClusterIssuer, and future add-ons are deployed via ArgoCD

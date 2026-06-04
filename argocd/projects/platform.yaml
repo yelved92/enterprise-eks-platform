@@ -14,7 +14,7 @@ spec:
   sourceRepos:
     - "https://github.com/yelved92/enterprise-eks-platform.git"
     - "https://charts.jetstack.io"
-    - "https://kubernetes.github.io/ingress-nginx"
+    - "https://charts.konghq.com"
     - "https://open-telemetry.github.io/opentelemetry-helm-charts"
     # Phase 5: Security Hardening tools
     - "https://kyverno.github.io/kyverno/"
@@ -29,7 +29,7 @@ spec:
       server: "https://kubernetes.default.svc"
     - namespace: kube-system
       server: "https://kubernetes.default.svc"
-    - namespace: ingress-nginx
+    - namespace: kong
       server: "https://kubernetes.default.svc"
     - namespace: opentelemetry-demo
       server: "https://kubernetes.default.svc"

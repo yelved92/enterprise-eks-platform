@@ -12,17 +12,17 @@ output "igw_arn" {
   value       = var.enable_igw ? aws_internet_gateway.this[0].arn : null
 }
 
-output "nat_gateway_ids" {
-  description = "List of NAT Gateway IDs"
-  value       = var.enable_nat_gateway ? aws_nat_gateway.this[*].id : []
+output "nat_instance_id" {
+  description = "The ID of the NAT Instance"
+  value       = var.enable_nat_instance ? aws_instance.nat_instance[0].id : null
 }
 
-output "nat_gateway_public_ips" {
-  description = "List of public IPs associated with NAT Gateways"
-  value       = var.enable_nat_gateway ? aws_eip.nat[*].public_ip : []
+output "nat_instance_eni_id" {
+  description = "The primary network interface ID of the NAT Instance (for route table configuration)"
+  value       = var.enable_nat_instance ? aws_instance.nat_instance[0].primary_network_interface_id : null
 }
 
-output "single_nat_gateway" {
-  description = "Whether a single NAT Gateway is used"
-  value       = var.single_nat_gateway
+output "nat_instance_public_ip" {
+  description = "The public IP of the NAT Instance"
+  value       = var.enable_nat_instance ? aws_eip.nat_instance[0].public_ip : null
 }

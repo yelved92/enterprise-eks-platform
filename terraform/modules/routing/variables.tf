@@ -18,10 +18,10 @@ variable "igw_id" {
   default     = null
 }
 
-variable "nat_gateway_ids" {
-  description = "List of NAT Gateway IDs for private route tables"
-  type        = list(string)
-  default     = []
+variable "nat_instance_eni_id" {
+  description = "The primary network interface ID of the NAT Instance (for private route table default routes)"
+  type        = string
+  default     = null
 }
 
 variable "public_subnet_ids" {
@@ -40,12 +40,6 @@ variable "private_data_subnet_ids" {
   description = "List of private data subnet IDs to associate with private data route tables"
   type        = list(string)
   default     = []
-}
-
-variable "single_nat_gateway" {
-  description = "Whether a single NAT Gateway is used (affects route table association strategy)"
-  type        = bool
-  default     = true
 }
 
 variable "create_private_route_tables" {

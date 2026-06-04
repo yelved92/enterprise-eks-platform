@@ -55,37 +55,37 @@ variable "enable_dynamodb_gateway_endpoint" {
 variable "enable_ecr_api_endpoint" {
   description = "Enable ECR API Interface Endpoint"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_ecr_dkr_endpoint" {
   description = "Enable ECR DKR Interface Endpoint"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_ssm_endpoint" {
   description = "Enable SSM Interface Endpoint"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_kms_endpoint" {
   description = "Enable KMS Interface Endpoint"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_logs_endpoint" {
   description = "Enable CloudWatch Logs Interface Endpoint"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_sts_endpoint" {
   description = "Enable STS Interface Endpoint"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_s3_interface_endpoint" {

@@ -61,7 +61,7 @@ resource "aws_route" "private_app_nat" {
 
   route_table_id         = aws_route_table.private_app[count.index].id
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = var.single_nat_gateway ? var.nat_gateway_ids[0] : var.nat_gateway_ids[count.index]
+  network_interface_id   = var.nat_instance_eni_id
 }
 
 resource "aws_route_table_association" "private_app" {
@@ -94,7 +94,7 @@ resource "aws_route" "private_data_nat" {
 
   route_table_id         = aws_route_table.private_data[count.index].id
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = var.single_nat_gateway ? var.nat_gateway_ids[0] : var.nat_gateway_ids[length(var.private_app_subnet_ids) + count.index]
+  network_interface_id   = var.nat_instance_eni_id
 }
 
 resource "aws_route_table_association" "private_data" {

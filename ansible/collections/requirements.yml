@@ -8,22 +8,5 @@
 # =============================================================================
 
 collections:
-  # AWS collection for EC2, EKS, S3, etc.
-  - name: amazon.aws
-    version: ">=6.0.0"
-
-  # Kubernetes collection for managing K8s resources
   - name: kubernetes.core
     version: ">=2.4.0"
-
-  # Community general collection (utility modules)
-  - name: community.general
-    version: ">=7.0.0"
-
-  # Community crypto (certificate management)
-  - name: community.crypto
-    version: ">=2.0.0"
-
-  # Community Docker (container operations)
-  - name: community.docker
-    version: ">=3.4.0"

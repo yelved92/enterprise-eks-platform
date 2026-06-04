@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kong
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: enterprise-eks-platform
+    argocd.argoproj.io/app-of-apps: "true"
+spec:
+  project: platform
+
+  sources:
+    - repoURL: "https://charts.konghq.com"
+      chart: kong
+      targetRevision: "2.48.0"
+      helm:
+        valuesObject:
+          ingressController:
+            enabled: true
+            installCRDs: false
+          proxy:
+            type: LoadBalancer
+            annotations:
+              service.beta.kubernetes.io/aws-load-balancer-type: nlb
+              service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+              service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+          gateway:
+            enabled: false
+
+  destination:
+    namespace: kong
+    server: "https://kubernetes.default.svc"
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

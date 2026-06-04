@@ -1,0 +1,144 @@
+# =============================================================================
+# Deploy ArgoCD Playbook
+# =============================================================================
+# Installs ArgoCD into the EKS cluster using the Helm chart from the
+# ArgoCD project's official Helm repository.
+#
+# This replaces the previous Terraform-based deployment (module.argocd)
+# to keep Terraform focused on AWS infrastructure only, while Ansible
+# handles post-deployment Kubernetes operations.
+#
+# Usage:
+#   ansible-playbook playbooks/deploy-argocd.yml -e "environment=dev"
+#
+# Dependencies:
+#   - Ansible 2.14+
+#   - kubernetes.core collection installed
+#   - kubectl configured with cluster access
+# =============================================================================
+
+---
+- name: Deploy ArgoCD to EKS Cluster
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    environment: "{{ environment | default('dev') }}"
+    argocd_namespace: "argocd"
+    argocd_repo_url: "https://argoproj.github.io/argo-helm"
+    argocd_chart_name: "argo-cd"
+    argocd_helm_version: "5.46.0"
+    argocd_cluster_name: "dev"
+
+    # ArgoCD configuration
+    argocd_domain: "argocd.{{ argocd_cluster_name }}.svc.cluster.local"
+    argocd_admin_user: "yelved92"
+    git_repo_url: "https://github.com/yelved92/enterprise-eks-platform.git"
+    git_repo_name: "enterprise-eks-platform"
+
+    # Security context for container
+    container_security_context:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
+
+  tasks:
+    - name: Create ArgoCD namespace
+      kubernetes.core.k8s:
+        name: "{{ argocd_namespace }}"
+        api_version: v1
+        kind: Namespace
+        state: present
+        definition:
+          metadata:
+            labels:
+              app.kubernetes.io/managed-by: "ansible"
+              app.kubernetes.io/part-of: "argocd"
+
+    - name: Add Argo Helm repository
+      kubernetes.core.helm_repository:
+        name: argo
+        repo_url: "{{ argocd_repo_url }}"
+
+    - name: Deploy ArgoCD Helm chart
+      kubernetes.core.helm:
+        name: argocd
+        chart_ref: "argo/{{ argocd_chart_name }}"
+        chart_version: "{{ argocd_helm_version }}"
+        release_namespace: "{{ argocd_namespace }}"
+        create_namespace: false
+        wait: true
+        wait_timeout: "10m"
+        values:
+          global:
+            domain: "{{ argocd_domain }}"
+          server:
+            service:
+              type: ClusterIP
+              port: 443
+            ingress:
+              enabled: true
+              ingressClassName: kong
+              annotations:
+                cert-manager.io/cluster-issuer: letsencrypt-prod
+                kubernetes.io/tls-acme: "true"
+              hosts:
+                - "{{ argocd_domain }}"
+              tls:
+                - hosts:
+                    - "{{ argocd_domain }}"
+                  secretName: argocd-server-tls
+            rbacConfig:
+              policy.default: role:readonly
+              policy.csv: |
+                p, role:admin, applications, *, */*, allow
+                p, role:admin, clusters, *, *, allow
+                p, role:admin, projects, *, *, allow
+                g, {{ argocd_admin_user }}, role:admin
+          configs:
+            cm:
+              url: "https://{{ argocd_domain }}"
+              admin.enabled: false
+            params:
+              server.insecure: true
+              server.disable.auth: false
+            repositories:
+              - url: "{{ git_repo_url }}"
+                type: git
+                name: "{{ git_repo_name }}"
+          controller:
+            replicas: 1
+          redis:
+            enabled: true
+            auth:
+              enabled: false
+            password: ""
+          repoServer:
+            replicas: 1
+            autoscaling:
+              enabled: false
+          applicationController:
+            replicas: 1
+
+    - name: Wait for ArgoCD pods to be ready
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: "{{ argocd_namespace }}"
+        label_selectors:
+          - "app.kubernetes.io/part-of = argocd"
+      register: argocd_pods
+      retries: 30
+      delay: 10
+      until: argocd_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length >= 6
+
+    - name: Show ArgoCD deployment status
+      ansible.builtin.debug:
+        msg:
+          - "ArgoCD deployed successfully to namespace: {{ argocd_namespace }}"
+          - "Pods running: {{ argocd_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length }}"
+          - ""
+          - "To retrieve the admin password, run:"
+          - "  kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"

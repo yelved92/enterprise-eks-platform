@@ -7,23 +7,9 @@
 ---
 # Project metadata
 project_name: "enterprise-eks-platform"
-project_domain: "eks.example.com"
 
 # AWS configuration
 aws_region: "{{ lookup('env', 'AWS_REGION') | default('us-east-1', true) }}"
-aws_account_id: "{{ lookup('env', 'AWS_ACCOUNT_ID') | default('', true) }}"
 
 # Environment
 environment: "{{ lookup('env', 'ENVIRONMENT') | default('dev', true) }}"
-
-# Terraform backend
-terraform_backend_bucket_prefix: "enterprise-eks-platform-tfstate"
-dynamodb_lock_table: "terraform-state-lock"
-
-# EKS configuration
-eks_version: "1.28"
-eks_cluster_blue_name: "eks-blue-{{ environment }}"
-eks_cluster_green_name: "eks-green-{{ environment }}"
-
-# Logging
-ansible_log_level: "{{ lookup('env', 'ANSIBLE_LOG_LEVEL') | default('info', true) }}"
