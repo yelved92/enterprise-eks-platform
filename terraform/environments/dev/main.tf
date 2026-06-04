@@ -28,13 +28,13 @@ locals {
 module "vpc" {
   source = "../../modules/vpc"
 
-  name                  = var.environment
-  cidr_block            = var.vpc_cidr
-  enable_dns_hostnames  = true
-  enable_dns_support    = true
-  enable_flow_logs      = var.enable_flow_logs
+  name                     = var.environment
+  cidr_block               = var.vpc_cidr
+  enable_dns_hostnames     = true
+  enable_dns_support       = true
+  enable_flow_logs         = var.enable_flow_logs
   flow_logs_retention_days = 30
-  tags                  = var.tags
+  tags                     = var.tags
 }
 
 # ------------------------------------------------------------------------------
@@ -56,14 +56,14 @@ module "subnets" {
 module "gateways" {
   source = "../../modules/gateways"
 
-  name                = var.environment
-  vpc_id              = module.vpc.vpc_id
-  public_subnet_ids   = module.subnets.public_subnet_ids
-  public_subnet_id    = module.subnets.public_subnet_ids[0]
+  name                 = var.environment
+  vpc_id               = module.vpc.vpc_id
+  public_subnet_ids    = module.subnets.public_subnet_ids
+  public_subnet_id     = module.subnets.public_subnet_ids[0]
   private_subnet_cidrs = local.private_subnet_cidrs
-  enable_nat_instance = true
-  enable_igw          = true
-  tags                = var.tags
+  enable_nat_instance  = true
+  enable_igw           = true
+  tags                 = var.tags
 }
 
 # ------------------------------------------------------------------------------
@@ -72,15 +72,15 @@ module "gateways" {
 module "routing" {
   source = "../../modules/routing"
 
-  name                      = var.environment
-  vpc_id                    = module.vpc.vpc_id
-  igw_id                    = module.gateways.igw_id
-  nat_instance_eni_id       = module.gateways.nat_instance_eni_id
-  public_subnet_ids         = module.subnets.public_subnet_ids
-  private_app_subnet_ids    = module.subnets.private_app_subnet_ids
-  private_data_subnet_ids   = module.subnets.private_data_subnet_ids
+  name                        = var.environment
+  vpc_id                      = module.vpc.vpc_id
+  igw_id                      = module.gateways.igw_id
+  nat_instance_eni_id         = module.gateways.nat_instance_eni_id
+  public_subnet_ids           = module.subnets.public_subnet_ids
+  private_app_subnet_ids      = module.subnets.private_app_subnet_ids
+  private_data_subnet_ids     = module.subnets.private_data_subnet_ids
   create_private_route_tables = true
-  tags                      = var.tags
+  tags                        = var.tags
 }
 
 # ------------------------------------------------------------------------------
@@ -89,11 +89,11 @@ module "routing" {
 module "security_groups" {
   source = "../../modules/security_groups"
 
-  name               = var.environment
-  vpc_id             = module.vpc.vpc_id
-  vpc_cidr_block     = module.vpc.vpc_cidr_block
+  name                 = var.environment
+  vpc_id               = module.vpc.vpc_id
+  vpc_cidr_block       = module.vpc.vpc_cidr_block
   enable_https_ingress = true
-  tags               = var.tags
+  tags                 = var.tags
 }
 
 # ------------------------------------------------------------------------------
@@ -117,11 +117,11 @@ module "network_acls" {
 module "kms" {
   source = "../../modules/kms"
 
-  name                   = var.environment
-  enable_key_rotation    = true
+  name                    = var.environment
+  enable_key_rotation     = true
   deletion_window_in_days = 30
-  enable_default_ebs_key = true
-  tags                   = var.tags
+  enable_default_ebs_key  = true
+  tags                    = var.tags
 }
 
 # ------------------------------------------------------------------------------
@@ -144,25 +144,25 @@ module "iam" {
 module "vpc_endpoints" {
   source = "../../modules/vpc_endpoints"
 
-  name                       = var.environment
-  vpc_id                     = module.vpc.vpc_id
-  private_app_subnet_ids     = module.subnets.private_app_subnet_ids
-  private_data_subnet_ids    = module.subnets.private_data_subnet_ids
-  private_app_route_table_ids = module.routing.private_app_route_table_ids
-  private_data_route_table_ids = module.routing.private_data_route_table_ids
-  security_group_id          = module.security_groups.cluster_security_group_id
-  enable_s3_gateway_endpoint      = true
+  name                             = var.environment
+  vpc_id                           = module.vpc.vpc_id
+  private_app_subnet_ids           = module.subnets.private_app_subnet_ids
+  private_data_subnet_ids          = module.subnets.private_data_subnet_ids
+  private_app_route_table_ids      = module.routing.private_app_route_table_ids
+  private_data_route_table_ids     = module.routing.private_data_route_table_ids
+  security_group_id                = module.security_groups.cluster_security_group_id
+  enable_s3_gateway_endpoint       = true
   enable_dynamodb_gateway_endpoint = true
   # Interface endpoints disabled for cost optimization (NAT Instance handles routing)
-  enable_s3_interface_endpoint  = false
-  enable_ec2_endpoint           = false
-  enable_ecr_api_endpoint       = false
-  enable_ecr_dkr_endpoint       = false
-  enable_ssm_endpoint           = false
-  enable_kms_endpoint           = false
-  enable_logs_endpoint          = false
-  enable_sts_endpoint           = false
-  tags                          = var.tags
+  enable_s3_interface_endpoint = false
+  enable_ec2_endpoint          = false
+  enable_ecr_api_endpoint      = false
+  enable_ecr_dkr_endpoint      = false
+  enable_ssm_endpoint          = false
+  enable_kms_endpoint          = false
+  enable_logs_endpoint         = false
+  enable_sts_endpoint          = false
+  tags                         = var.tags
 }
 
 # ------------------------------------------------------------------------------
@@ -171,12 +171,12 @@ module "vpc_endpoints" {
 module "eks" {
   source = "../../modules/eks"
 
-  cluster_name            = var.environment
-  cluster_version         = var.cluster_version
-  cluster_role_arn        = module.iam.cluster_role_arn
-  subnet_ids              = module.subnets.private_app_subnet_ids
-  security_group_ids      = [module.security_groups.cluster_security_group_id]
-  kms_key_arn             = module.kms.kms_key_arn
+  cluster_name       = var.environment
+  cluster_version    = var.cluster_version
+  cluster_role_arn   = module.iam.cluster_role_arn
+  subnet_ids         = module.subnets.private_app_subnet_ids
+  security_group_ids = [module.security_groups.cluster_security_group_id]
+  kms_key_arn        = module.kms.kms_key_arn
 
   endpoint_private_access    = var.endpoint_private_access
   endpoint_public_access     = var.endpoint_public_access
@@ -202,8 +202,9 @@ module "iam_irsa" {
   oidc_provider_arn = module.eks.oidc_provider_arn
   oidc_provider_url = replace(module.eks.oidc_provider_url, "https://", "")
 
-  enable_ebs_csi_role = true
-  enable_vpc_cni_role = true
+  enable_ebs_csi_role      = true
+  enable_vpc_cni_role      = true
+  enable_cert_manager_role = true
 
   tags = var.tags
 }
@@ -214,11 +215,11 @@ module "iam_irsa" {
 module "node_group" {
   source = "../../modules/managed_node_groups"
 
-  cluster_name            = module.eks.cluster_name
-  cluster_version         = var.cluster_version
-  node_group_name         = var.node_group_name
-  node_role_arn           = module.iam.node_role_arn
-  subnet_ids              = module.subnets.private_app_subnet_ids
+  cluster_name    = module.eks.cluster_name
+  cluster_version = var.cluster_version
+  node_group_name = var.node_group_name
+  node_role_arn   = module.iam.node_role_arn
+  subnet_ids      = module.subnets.private_app_subnet_ids
 
   instance_types = var.node_group_instance_types
   disk_size      = var.node_group_disk_size
@@ -239,18 +240,20 @@ module "node_group" {
 # ------------------------------------------------------------------------------
 # Route53 Module — DNS for yelved.xyz
 # ------------------------------------------------------------------------------
-data "aws_lb" "nginx_nlb" {
-  name = "kong-kong-proxy"
+data "aws_lb" "kong_nlb" {
+  tags = {
+    "kubernetes.io/service-name" = "kong/kong-kong-proxy"
+  }
 }
 
 module "route53" {
   source = "../../modules/route53"
 
-  domain_name       = var.domain_name
-  environment       = var.environment
-  nginx_nlb_dns_name = data.aws_lb.nginx_nlb.dns_name
-  nginx_nlb_zone_id  = data.aws_lb.nginx_nlb.zone_id
-  tags              = var.tags
+  domain_name        = var.domain_name
+  environment        = var.environment
+  nginx_nlb_dns_name = data.aws_lb.kong_nlb.dns_name
+  nginx_nlb_zone_id  = data.aws_lb.kong_nlb.zone_id
+  tags               = var.tags
 }
 
 # ------------------------------------------------------------------------------
@@ -359,4 +362,37 @@ output "eks_node_group_name" {
 # GitOps (see argocd/applications/) rather than Terraform. This follows the
 # principle: Terraform manages AWS infrastructure, ArgoCD manages cluster apps.
 # ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# Additional Outputs
+# ------------------------------------------------------------------------------
+output "cert_manager_role_arn" {
+  description = "ARN of the cert-manager IRSA role for Route53 DNS-01 challenges"
+  value       = module.iam_irsa.cert_manager_role_arn
+}
+
+output "hosted_zone_id" {
+  description = "ID of the Route53 hosted zone for yelved.xyz"
+  value       = module.route53.hosted_zone_id
+}
+
+output "auth_record_fqdn" {
+  description = "FQDN of the Authentik DNS record"
+  value       = module.route53.auth_record_fqdn
+}
+
+output "kong_record_fqdn" {
+  description = "FQDN of the Kong proxy DNS record"
+  value       = module.route53.kong_record_fqdn
+}
+
+output "grafana_record_fqdn" {
+  description = "FQDN of the Grafana DNS record"
+  value       = module.route53.grafana_record_fqdn
+}
+
+output "route53_name_servers" {
+  description = "List of Route53 nameservers. Set these at your domain registrar (GoDaddy)."
+  value       = module.route53.name_servers
+}
 

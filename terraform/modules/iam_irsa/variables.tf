@@ -48,6 +48,12 @@ variable "enable_vpc_cni_role" {
   default     = true
 }
 
+variable "enable_cert_manager_role" {
+  description = "Create IRSA role for cert-manager ServiceAccount (cert-manager/cert-manager) with Route53 DNS-01 permissions."
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Additional tags for all IRSA resources."
   type        = map(string)

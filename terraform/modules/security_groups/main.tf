@@ -101,10 +101,10 @@ resource "aws_security_group" "nodes" {
 
   tags = merge(
     {
-      Name                                      = "${var.name}-eks-nodes"
-      Environment                               = var.name
-      ManagedBy                                 = "terraform"
-      "kubernetes.io/cluster/${var.name}"       = "owned"
+      Name                                = "${var.name}-eks-nodes"
+      Environment                         = var.name
+      ManagedBy                           = "terraform"
+      "kubernetes.io/cluster/${var.name}" = "owned"
     },
     var.tags
   )
@@ -112,21 +112,21 @@ resource "aws_security_group" "nodes" {
 
 # Node to node communication (all ports/protocols for Kubernetes)
 resource "aws_vpc_security_group_ingress_rule" "nodes_self" {
-  security_group_id = aws_security_group.nodes.id
+  security_group_id            = aws_security_group.nodes.id
   referenced_security_group_id = aws_security_group.nodes.id
-  from_port         = 0
-  to_port           = 65535
-  ip_protocol       = "tcp"
-  description       = "Node to node communication"
+  from_port                    = 0
+  to_port                      = 65535
+  ip_protocol                  = "tcp"
+  description                  = "Node to node communication"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "nodes_self_udp" {
-  security_group_id = aws_security_group.nodes.id
+  security_group_id            = aws_security_group.nodes.id
   referenced_security_group_id = aws_security_group.nodes.id
-  from_port         = 0
-  to_port           = 65535
-  ip_protocol       = "udp"
-  description       = "Node to node UDP communication"
+  from_port                    = 0
+  to_port                      = 65535
+  ip_protocol                  = "udp"
+  description                  = "Node to node UDP communication"
 }
 
 # Node communication within VPC
@@ -167,12 +167,12 @@ resource "aws_security_group" "internal_services" {
 
 # Allow all internal traffic within the security group
 resource "aws_vpc_security_group_ingress_rule" "internal_self" {
-  security_group_id = aws_security_group.internal_services.id
+  security_group_id            = aws_security_group.internal_services.id
   referenced_security_group_id = aws_security_group.internal_services.id
-  from_port         = 0
-  to_port           = 65535
-  ip_protocol       = "tcp"
-  description       = "Internal service communication"
+  from_port                    = 0
+  to_port                      = 65535
+  ip_protocol                  = "tcp"
+  description                  = "Internal service communication"
 }
 
 # ------------------------------------------------------------------------------
@@ -195,19 +195,19 @@ resource "aws_security_group" "data" {
 
 # Allow traffic from node groups and internal services to data layer
 resource "aws_vpc_security_group_ingress_rule" "data_from_nodes" {
-  security_group_id = aws_security_group.data.id
+  security_group_id            = aws_security_group.data.id
   referenced_security_group_id = aws_security_group.nodes.id
-  from_port         = 0
-  to_port           = 65535
-  ip_protocol       = "tcp"
-  description       = "Data access from nodes"
+  from_port                    = 0
+  to_port                      = 65535
+  ip_protocol                  = "tcp"
+  description                  = "Data access from nodes"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "data_from_internal" {
-  security_group_id = aws_security_group.data.id
+  security_group_id            = aws_security_group.data.id
   referenced_security_group_id = aws_security_group.internal_services.id
-  from_port         = 0
-  to_port           = 65535
-  ip_protocol       = "tcp"
-  description       = "Data access from internal services"
+  from_port                    = 0
+  to_port                      = 65535
+  ip_protocol                  = "tcp"
+  description                  = "Data access from internal services"
 }

@@ -27,7 +27,7 @@ variable "cidr_blocks" {
       private_data = ["10.0.64.0/21", "10.0.72.0/21", "10.0.80.0/21"]
     }
   EOT
-  type = map(list(string))
+  type        = map(list(string))
 
   validation {
     condition = alltrue([

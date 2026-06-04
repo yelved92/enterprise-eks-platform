@@ -16,3 +16,18 @@ output "argocd_record_fqdn" {
   description = "Fully qualified domain name for ArgoCD"
   value       = aws_route53_record.argocd.fqdn
 }
+
+output "auth_record_fqdn" {
+  description = "Fully qualified domain name for Authentik"
+  value       = aws_route53_record.auth.fqdn
+}
+
+output "kong_record_fqdn" {
+  description = "Fully qualified domain name for Kong"
+  value       = aws_route53_record.kong.fqdn
+}
+
+output "grafana_record_fqdn" {
+  description = "Fully qualified domain name for Grafana"
+  value       = aws_route53_record.grafana.fqdn
+}

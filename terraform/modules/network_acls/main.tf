@@ -104,7 +104,7 @@ resource "aws_network_acl_rule" "private_ingress_vpc" {
   cidr_block     = var.vpc_cidr_block
   from_port      = 0
   to_port        = 0
-    }
+}
 
 resource "aws_network_acl_rule" "private_ingress_ephemeral" {
   count = length(var.private_app_subnet_ids) > 0 ? 1 : 0

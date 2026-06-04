@@ -16,3 +16,10 @@ spec:
           ingress:
             ingressClassName: nginx
             serviceType: ClusterIP
+      - dns01:
+          route53:
+            region: us-east-1
+            hostedZoneID: Z04846841X40493244Q3S
+        selector:
+          dnsZones:
+            - "yelved.xyz"

@@ -1,6 +1,6 @@
 # Project State
 
-**Current Phase:** Phase5 — Security Hardening (In Progress 🚧)
+**Current Phase:** Phase6 — SSO Portal (Authentik + Kong OIDC) 🚧
 
 ## Completed Phases
 
@@ -17,6 +17,7 @@
 | 5B | Falco runtime security deployed via ArgoCD, eBPF enabled | 🚧 Ready to Deploy |
 | 5C | External Secrets Operator deployed, AWS Secrets Manager integration | 🚧 Ready to Deploy |
 | 5D | Network Policies created (default-deny + allow rules) | 🚧 Ready to Deploy |
+| 6A | Route53 DNS records + cert-manager IRSA role for DNS-01 wildcard TLS | 🚧 TF Applied
 
 ## Infrastructure Deployed (~125 resources)
 

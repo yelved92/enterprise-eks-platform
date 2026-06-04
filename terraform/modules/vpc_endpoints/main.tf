@@ -132,7 +132,7 @@ locals {
 resource "aws_vpc_endpoint" "interface" {
   for_each = { for k, v in local.interface_endpoints : k => v if v.enable }
 
-    vpc_id              = var.vpc_id
+  vpc_id              = var.vpc_id
   service_name        = each.key == "s3" ? data.aws_vpc_endpoint_service.s3_interface[0].service_name : "com.amazonaws.${data.aws_region.current.region}.${each.value.service}"
   vpc_endpoint_type   = "Interface"
   subnet_ids          = var.private_app_subnet_ids

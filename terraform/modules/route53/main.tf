@@ -53,3 +53,48 @@ resource "aws_route53_record" "root" {
     evaluate_target_health = true
   }
 }
+
+# ------------------------------------------------------------------------------
+# Authentik DNS Record (NLB alias)
+# ------------------------------------------------------------------------------
+resource "aws_route53_record" "auth" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "auth.${var.domain_name}"
+  type    = "A"
+
+  alias {
+    name                   = var.nginx_nlb_dns_name
+    zone_id                = var.nginx_nlb_zone_id
+    evaluate_target_health = true
+  }
+}
+
+# ------------------------------------------------------------------------------
+# Kong Proxy DNS Record (NLB alias)
+# ------------------------------------------------------------------------------
+resource "aws_route53_record" "kong" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "kong.${var.domain_name}"
+  type    = "A"
+
+  alias {
+    name                   = var.nginx_nlb_dns_name
+    zone_id                = var.nginx_nlb_zone_id
+    evaluate_target_health = true
+  }
+}
+
+# ------------------------------------------------------------------------------
+# Grafana DNS Record (NLB alias) — for future Phase 7 observability
+# ------------------------------------------------------------------------------
+resource "aws_route53_record" "grafana" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "grafana.${var.domain_name}"
+  type    = "A"
+
+  alias {
+    name                   = var.nginx_nlb_dns_name
+    zone_id                = var.nginx_nlb_zone_id
+    evaluate_target_health = true
+  }
+}

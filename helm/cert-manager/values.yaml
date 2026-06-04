@@ -8,6 +8,10 @@ cert-manager:
   installCRDs: true
   replicaCount: 1
 
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::704489329694:role/dev-cert-manager"
+
   resources:
     requests:
       cpu: 50m

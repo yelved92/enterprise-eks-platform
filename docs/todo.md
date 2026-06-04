@@ -36,55 +36,46 @@
 - [ ] **5.19** Enable Pod Security Standards (restricted)
 - [ ] **5.20** Test: pod-to-pod communication blocked
 
-### Phase 6 — Service Mesh (Istio)
+### Phase 6 — SSO Portal (Authentik + Kong OIDC) **[CURRENT 🚧]**
+
+#### Phase 6A: DNS + Wildcard TLS + IAM
+- [x] **6.1** Add Route53 DNS records for auth, kong, grafana subdomains (`terraform/modules/route53/`)
+- [x] **6.2** Add cert-manager IRSA role with Route53 DNS-01 permissions (`terraform/modules/iam_irsa/`)
+- [ ] **6.3** `terraform apply` — deploy DNS records + IRSA role
+- [ ] **6.4** Update ClusterIssuer to use DNS-01 solver for wildcard certs (`helm/cert-manager/templates/`)
+- [ ] **6.5** Enable cert-manager serviceAccount annotation with IRSA role ARN (`helm/cert-manager/values.yaml`)
+
+#### Phase 6B: Deploy Authentik
+- [ ] **6.6** Create Helm chart for Authentik (`helm/authentik/`)
+- [ ] **6.7** Create ArgoCD Application for Authentik (`argocd/applications/authentik.yaml`)
+- [ ] **6.8** Create ExternalSecrets for Authentik secrets (`security/external-secrets/authentik/`)
+- [ ] **6.9** Push + sync — Authentik deployed with Kong ingress at `auth.yelved.xyz`
+
+#### Phase 6C: Configure Authentik
+- [ ] **6.10** Configure GitHub OAuth source in Authentik
+- [ ] **6.11** Create OIDC providers + Applications for ArgoCD, Kong, Grafana
+- [ ] **6.12** Validate: `auth.yelved.xyz/if/user/` shows app library portal
+
+#### Phase 6D: Kong OIDC Plugin
+- [ ] **6.13** Configure Kong OIDC plugin (openid-connect) pointing to Authentik
+- [ ] **6.14** Create Kong Ingress routes for argocd, kong, grafana
+- [ ] **6.15** Validate: unauthenticated requests redirected to Authentik login
+
+#### Phase 6E: Migrate ArgoCD
+- [ ] **6.16** Update ArgoCD OIDC config from Dex to Authentik
+- [ ] **6.17** Validate: ArgoCD login via Authentik → GitHub flow
+- [ ] **6.18** Disable old Dex config
+
+### Phase 7 — Service Mesh (Istio)
 - [ ] Istio install, mTLS, ingress gateway, canary, circuit breaking, fault injection
 
-### Phase 7 — Observability
-- [ ] Prometheus, Grafana, Loki, Tempo, OpenTelemetry, AlertManager, dashboards, SLOs
-
-# Todo
-## High Priority
-
-### Phase 4 — GitOps with ArgoCD + Secure Access + OTel Demo **[NEXT]**
-
-#### Phase 4A: Base ArgoCD Installation
-- [x] **4.1** Deploy ArgoCD via Terraform Helm provider → `argocd` namespace
-- [x] **4.2** Create ArgoCD project + bootstrap app-of-apps root Application
-- [x] **4.3** Configure sync policies (auto-sync, self-heal, prune)
-- [x] **4.4** Validate drift detection and reconciliation
-
-#### Phase 4B: TLS + OAuth (GitHub SSO) for ArgoCD UI
-- [x] **4.5** Deploy cert-manager via ArgoCD GitOps (Helm chart + Let's Encrypt ClusterIssuer)
-- [ ] **4.6** Create Route53 DNS record for ArgoCD UI (e.g., argocd.yourdomain.com)
-- [ ] **4.7** Configure ArgoCD LoadBalancer with TLS (NLB + cert-manager annotation)
-- [ ] **4.8** Create GitHub OAuth App + configure ArgoCD Dex SSO
-- [ ] **4.9** Validate: GitHub login → ArgoCD UI → RBAC mapping
-
-#### Phase 4C: GitOps Validation with Real Workload (Hybrid Approach)
-- [ ] **4.10** Deploy OpenTelemetry Demo via ArgoCD (first child app)
-  - **Approach:** Hybrid (multi-source ArgoCD Application)
-  - **Upstream source:** Official OpenTelemetry Demo Helm chart (`https://github.com/open-telemetry/opentelemetry-demo.git`)
-  - **Local source:** Custom `values.yaml` overrides in our repo (`apps/otel-demo/`)
-  - **Benefits:** Version-controlled customizations, can pin upstream versions, true GitOps
-- [ ] **4.11** Validate: app sync, health checks, ingress, drift detection
-- [ ] **4.12** Test manual change → drift → reconciliation cycle
-
-### Phase 5 — Security Hardening
-- [ ] Kyverno / OPA Gatekeeper admission policies
-- [ ] Falco runtime security, Trivy image scanning
-- [ ] External Secrets Operator + AWS Secrets Manager
-- [ ] Network policies, Pod Security Standards
-
-### Phase 6 — Service Mesh (Istio)
-- [ ] Istio install, mTLS, ingress gateway, canary, circuit breaking, fault injection
-
-### Phase 7 — Observability
+### Phase 8 — Observability
 - [ ] Prometheus, Grafana, Loki, Tempo, OpenTelemetry, AlertManager, dashboards, SLOs
 
 ## Medium Priority
-- **Phase 8:** CI/CD pipelines (GitHub Actions — lint, scan, build, deploy, smoke tests)
-- **Phase 9:** Disaster Recovery (Velero, EBS snapshots, failover, DR runbooks)
-- **Phase 10:** Advanced topics (Chaos, Karpenter, Spot, Cosign, kube-bench, SRE playbooks)
+- **Phase 9:** CI/CD pipelines (GitHub Actions — lint, scan, build, deploy, smoke tests)
+- **Phase 10:** Disaster Recovery (Velero, EBS snapshots, failover, DR runbooks)
+- **Phase 11:** Advanced topics (Chaos, Karpenter, Spot, Cosign, kube-bench, SRE playbooks)
 
 ## Technical Debt
 - [ ] Fix `Environment = var.cluster_name` tag misnomer

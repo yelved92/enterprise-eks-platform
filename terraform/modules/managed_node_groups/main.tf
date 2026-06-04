@@ -18,7 +18,7 @@ resource "aws_eks_node_group" "this" {
 
   instance_types = var.instance_types
   capacity_type  = var.use_spot ? "SPOT" : "ON_DEMAND"
-  version       = var.cluster_version
+  version        = var.cluster_version
 
   # disk_size is intentionally omitted: when launch_template is used, EBS
   # configuration (size, type, IOPS, KMS) comes from the launch template.
@@ -53,9 +53,9 @@ resource "aws_eks_node_group" "this" {
 
   tags = merge(
     {
-      Name                                      = var.node_group_name
-      Environment                               = var.cluster_name
-      ManagedBy                                 = "terraform"
+      Name                                        = var.node_group_name
+      Environment                                 = var.cluster_name
+      ManagedBy                                   = "terraform"
       "kubernetes.io/cluster/${var.cluster_name}" = "owned"
     },
     var.tags
@@ -76,8 +76,8 @@ resource "aws_eks_node_group" "this" {
 # Launch Template (for KMS EBS encryption)
 # ------------------------------------------------------------------------------
 resource "aws_launch_template" "this" {
-  name_prefix   = "${var.node_group_name}-"
-  description   = "Launch template for EKS managed node group ${var.node_group_name}"
+  name_prefix = "${var.node_group_name}-"
+  description = "Launch template for EKS managed node group ${var.node_group_name}"
 
   block_device_mappings {
     device_name = "/dev/xvda"
@@ -104,9 +104,9 @@ resource "aws_launch_template" "this" {
 
     tags = merge(
       {
-        Name                                      = var.node_group_name
-        Environment                               = var.cluster_name
-        ManagedBy                                 = "terraform"
+        Name                                        = var.node_group_name
+        Environment                                 = var.cluster_name
+        ManagedBy                                   = "terraform"
         "kubernetes.io/cluster/${var.cluster_name}" = "owned"
       },
       var.tags
