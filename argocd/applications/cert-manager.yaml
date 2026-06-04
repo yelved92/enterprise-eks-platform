@@ -21,6 +21,9 @@ spec:
           serviceAccount:
             annotations:
               eks.amazonaws.com/role-arn: "arn:aws:iam::704489329694:role/dev-cert-manager"
+          extraArgs:
+            - --dns01-recursive-nameservers-only
+            - --dns01-recursive-nameservers=172.20.0.10:53
 
     - repoURL: "https://github.com/yelved92/enterprise-eks-platform.git"
       targetRevision: feat/phase-5-security
