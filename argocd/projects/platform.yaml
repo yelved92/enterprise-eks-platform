@@ -20,6 +20,8 @@ spec:
     - "https://kyverno.github.io/kyverno/"
     - "https://falcosecurity.github.io/charts/"
     - "https://charts.external-secrets.io/"
+    # Phase 6: SSO Portal (Authentik)
+    - "https://charts.goauthentik.io"
   # Destinations: only this cluster, only platform-managed namespaces
   # cert-manager needs kube-system for leader election roles
   destinations:
@@ -45,6 +47,9 @@ spec:
     - namespace: falco
       server: "https://kubernetes.default.svc"
     - namespace: test-secrets
+      server: "https://kubernetes.default.svc"
+    # Phase 6: SSO Portal (Authentik)
+    - namespace: authentik
       server: "https://kubernetes.default.svc"
 
   # Cluster-scoped resources required by platform components

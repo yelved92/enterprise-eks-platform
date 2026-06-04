@@ -1,0 +1,12 @@
+apiVersion: v2
+name: authentik
+description: A Helm chart for deploying authentik Identity Provider via ArgoCD
+type: application
+version: 1.0.0
+appVersion: "2026.5.2"
+
+dependencies:
+  - name: authentik
+    version: "2026.5.2"
+    repository: "https://charts.goauthentik.io"
+    alias: authentik

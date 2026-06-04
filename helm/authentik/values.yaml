@@ -1,0 +1,86 @@
+# ==============================================================================
+# authentik Helm Values
+# ==============================================================================
+# Deployed via ArgoCD GitOps. Customize settings here.
+# Uses upstream chart from https://charts.goauthentik.io
+# ------------------------------------------------------------------------------
+
+authentik:
+  # Secret key for cookie signing and unique user IDs — DON'T change after first install
+  # This will be overridden by an external secret later
+  secret_key: "changeme-initial-setup-will-be-replaced-by-external-secret"
+
+  log_level: info
+
+  # Error reporting — opt-in, disabled for dev
+  error_reporting:
+    enabled: false
+
+  postgresql:
+    host: ""  # Use in-cluster PostgreSQL (Bitnami subchart)
+    name: authentik
+    user: authentik
+    password: "changeme-postgres-password"  # Override via ExternalSecret
+    port: 5432
+
+# Enable in-cluster PostgreSQL (Bitnami)
+postgresql:
+  enabled: true
+  auth:
+    database: authentik
+    username: authentik
+    password: "changeme-postgres-password"
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+    resourcesPreset: "none"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 512Mi
+
+# --- Server configuration ---
+server:
+  replicas: 1
+
+  ingress:
+    enabled: true
+    ingressClassName: kong
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      konghq.com/strip-path: "true"
+    hosts:
+      - auth.yelved.xyz
+    tls:
+      - hosts:
+          - auth.yelved.xyz
+        secretName: authentik-tls
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+  # Liveness and readiness probes use defaults from upstream chart
+
+# --- Worker configuration ---
+worker:
+  replicas: 1
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+# --- Service Account ---
+serviceAccount:
+  create: true
+  annotations: {}
+  # IRSA for future RDS use — not needed with in-cluster PostgreSQL

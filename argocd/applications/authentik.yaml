@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: enterprise-eks-platform
+    argocd.argoproj.io/app-of-apps: "true"
+spec:
+  project: platform
+
+  sources:
+    - repoURL: "https://charts.goauthentik.io"
+      chart: authentik
+      targetRevision: "2026.5.2"
+      helm:
+        valuesFiles:
+          - $values/helm/authentik/values.yaml
+    - repoURL: "https://github.com/yelved92/enterprise-eks-platform.git"
+      targetRevision: feat/phase-5-security
+      ref: values
+
+  destination:
+    namespace: authentik
+    server: "https://kubernetes.default.svc"
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
