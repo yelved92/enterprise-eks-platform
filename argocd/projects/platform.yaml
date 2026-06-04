@@ -89,6 +89,9 @@ spec:
       kind: ClusterPolicyReport
     - group: kyverno.io
       kind: PolicyReport
+    # Phase 6: External Secrets (ClusterSecretStore)
+    - group: external-secrets.io
+      kind: ClusterSecretStore
 
   # Namespaced resources — allow everything for platform services
   namespaceResourceWhitelist:
