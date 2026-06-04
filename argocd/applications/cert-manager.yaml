@@ -18,9 +18,12 @@ spec:
         valuesObject:
           installCRDs: true
           replicaCount: 1
+          serviceAccount:
+            annotations:
+              eks.amazonaws.com/role-arn: "arn:aws:iam::704489329694:role/dev-cert-manager"
 
     - repoURL: "https://github.com/yelved92/enterprise-eks-platform.git"
-      targetRevision: master
+      targetRevision: feat/phase-5-security
       path: helm/cert-manager/templates
       directory:
         recurse: true
