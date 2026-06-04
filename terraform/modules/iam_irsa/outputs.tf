@@ -31,3 +31,13 @@ output "cert_manager_role_name" {
   description = "Name of the cert-manager IRSA role (null if disabled)"
   value       = try(aws_iam_role.cert_manager[0].name, null)
 }
+
+output "external_secrets_role_arn" {
+  description = "ARN of the External Secrets Operator IRSA role for Secrets Manager (null if disabled)"
+  value       = try(aws_iam_role.external_secrets[0].arn, null)
+}
+
+output "external_secrets_role_name" {
+  description = "Name of the External Secrets Operator IRSA role (null if disabled)"
+  value       = try(aws_iam_role.external_secrets[0].name, null)
+}

@@ -202,9 +202,10 @@ module "iam_irsa" {
   oidc_provider_arn = module.eks.oidc_provider_arn
   oidc_provider_url = replace(module.eks.oidc_provider_url, "https://", "")
 
-  enable_ebs_csi_role      = true
-  enable_vpc_cni_role      = true
-  enable_cert_manager_role = true
+  enable_ebs_csi_role          = true
+  enable_vpc_cni_role          = true
+  enable_cert_manager_role     = true
+  enable_external_secrets_role = true
 
   tags = var.tags
 }
@@ -394,5 +395,10 @@ output "grafana_record_fqdn" {
 output "route53_name_servers" {
   description = "List of Route53 nameservers. Set these at your domain registrar (GoDaddy)."
   value       = module.route53.name_servers
+}
+
+output "external_secrets_role_arn" {
+  description = "ARN of the External Secrets Operator IRSA role"
+  value       = module.iam_irsa.external_secrets_role_arn
 }
 

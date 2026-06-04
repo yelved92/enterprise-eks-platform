@@ -191,3 +191,82 @@ resource "aws_iam_role_policy_attachment" "cert_manager_route53" {
   role       = aws_iam_role.cert_manager[0].name
   policy_arn = aws_iam_policy.cert_manager_route53[0].arn
 }
+
+# ------------------------------------------------------------------------------
+# External Secrets Operator IRSA Role (Secrets Manager read)
+# ------------------------------------------------------------------------------
+# Assumed by the `external-secrets-sa` ServiceAccount in test-secrets namespace.
+# Grants read-only permissions to AWS Secrets Manager for syncing secrets
+# into Kubernetes using External Secrets Operator.
+# ------------------------------------------------------------------------------
+resource "aws_iam_role" "external_secrets" {
+  count = var.enable_external_secrets_role ? 1 : 0
+
+  name        = "${var.name}-external-secrets"
+  description = "IRSA role assumed by External Secrets Operator ServiceAccount for Secrets Manager access"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Principal = {
+          Federated = var.oidc_provider_arn
+        }
+        Condition = {
+          StringEquals = {
+            "${var.oidc_provider_url}:sub" = "system:serviceaccount:test-secrets:external-secrets-sa"
+            "${var.oidc_provider_url}:aud" = "sts.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = merge(
+    {
+      Name      = "${var.name}-external-secrets"
+      ManagedBy = "terraform"
+    },
+    var.tags
+  )
+}
+
+# Custom IAM policy: Read-only access to AWS Secrets Manager
+resource "aws_iam_policy" "external_secrets" {
+  count = var.enable_external_secrets_role ? 1 : 0
+
+  name        = "${var.name}-external-secrets-sm-read"
+  description = "Allows External Secrets Operator to read secrets from AWS Secrets Manager"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:ListSecrets"
+        ]
+        Resource = ["*"]
+      }
+    ]
+  })
+
+  tags = merge(
+    {
+      Name      = "${var.name}-external-secrets-sm-read"
+      ManagedBy = "terraform"
+    },
+    var.tags
+  )
+}
+
+resource "aws_iam_role_policy_attachment" "external_secrets" {
+  count = var.enable_external_secrets_role ? 1 : 0
+
+  role       = aws_iam_role.external_secrets[0].name
+  policy_arn = aws_iam_policy.external_secrets[0].arn
+}

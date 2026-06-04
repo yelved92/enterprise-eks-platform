@@ -54,6 +54,12 @@ variable "enable_cert_manager_role" {
   default     = false
 }
 
+variable "enable_external_secrets_role" {
+  description = "Create IRSA role for External Secrets Operator ServiceAccount (test-secrets/external-secrets-sa) with AWS Secrets Manager read permissions."
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Additional tags for all IRSA resources."
   type        = map(string)
