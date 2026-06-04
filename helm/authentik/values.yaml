@@ -17,7 +17,7 @@ authentik:
     enabled: false
 
   postgresql:
-    host: ""  # Use in-cluster PostgreSQL (Bitnami subchart)
+    host: "authentik-postgresql"  # In-cluster PostgreSQL service
     name: authentik
     user: authentik
     password: "changeme-postgres-password"  # Override via ExternalSecret

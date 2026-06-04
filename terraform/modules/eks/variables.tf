@@ -83,6 +83,18 @@ variable "vpc_cni_addon_version" {
   default     = null
 }
 
+variable "ebs_csi_addon_version" {
+  description = "Version of the EBS CSI EKS add-on"
+  type        = string
+  default     = null
+}
+
+variable "ebs_csi_role_arn" {
+  description = "ARN of the IRSA role for EBS CSI driver"
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "Additional tags for all resources"
   type        = map(string)

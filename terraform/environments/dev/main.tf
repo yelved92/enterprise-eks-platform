@@ -183,6 +183,7 @@ module "eks" {
   public_access_cidrs        = var.public_access_cidrs
   enabled_cluster_log_types  = var.enabled_cluster_log_types
   cluster_log_retention_days = var.cluster_log_retention_days
+  ebs_csi_role_arn           = module.iam_irsa.ebs_csi_role_arn
 
   tags = var.tags
 }

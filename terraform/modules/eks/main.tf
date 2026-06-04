@@ -146,3 +146,27 @@ resource "aws_eks_addon" "vpc_cni" {
     var.tags
   )
 }
+
+# ------------------------------------------------------------------------------
+# EBS CSI Driver Add-on
+# ------------------------------------------------------------------------------
+# Required for PVC provisioning in EKS 1.34+ (in-tree EBS provisioner removed).
+# Uses the IRSA role created by the iam_irsa module.
+# ------------------------------------------------------------------------------
+resource "aws_eks_addon" "ebs_csi" {
+  cluster_name                = aws_eks_cluster.this.name
+  addon_name                  = "aws-ebs-csi-driver"
+  addon_version               = var.ebs_csi_addon_version
+  service_account_role_arn    = var.ebs_csi_role_arn
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+
+  tags = merge(
+    {
+      Name        = "${var.cluster_name}-ebs-csi"
+      Environment = var.cluster_name
+      ManagedBy   = "terraform"
+    },
+    var.tags
+  )
+}

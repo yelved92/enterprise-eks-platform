@@ -15,7 +15,7 @@ spec:
       chart: authentik
       targetRevision: "2026.5.2"
       helm:
-        valuesFiles:
+        valueFiles:
           - $values/helm/authentik/values.yaml
     - repoURL: "https://github.com/yelved92/enterprise-eks-platform.git"
       targetRevision: feat/phase-5-security
