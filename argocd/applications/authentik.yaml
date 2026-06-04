@@ -20,6 +20,11 @@ spec:
     - repoURL: "https://github.com/yelved92/enterprise-eks-platform.git"
       targetRevision: feat/phase-5-security
       ref: values
+    - repoURL: "https://github.com/yelved92/enterprise-eks-platform.git"
+      targetRevision: feat/phase-5-security
+      path: helm/authentik/templates
+      directory:
+        recurse: true
 
   destination:
     namespace: authentik
