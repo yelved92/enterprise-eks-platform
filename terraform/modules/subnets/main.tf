@@ -41,6 +41,9 @@ resource "aws_subnet" "this" {
       ManagedBy   = "terraform"
     },
     var.tags,
+    var.elbv2_cluster_name != "" ? { "elbv2.k8s.aws/cluster" = var.elbv2_cluster_name } : {},
+    each.value.type == "public" && var.elbv2_cluster_name != "" ? { "kubernetes.io/role/elb" = "1" } : {},
+    each.value.type == "private_app" && var.elbv2_cluster_name != "" ? { "kubernetes.io/role/internal-elb" = "1" } : {},
     each.value.type == "public" ? var.public_subnet_tags : {},
     each.value.type == "private_app" ? var.private_app_subnet_tags : {},
     each.value.type == "private_data" ? var.private_data_subnet_tags : {}

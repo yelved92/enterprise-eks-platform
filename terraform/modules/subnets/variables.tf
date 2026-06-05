@@ -49,6 +49,12 @@ variable "tags" {
   default     = {}
 }
 
+variable "elbv2_cluster_name" {
+  description = "EKS cluster name for the elbv2.k8s.aws/cluster subnet tag. Required for AWS Load Balancer Controller to discover subnets."
+  type        = string
+  default     = ""
+}
+
 variable "public_subnet_tags" {
   description = "Additional tags for public subnets"
   type        = map(string)

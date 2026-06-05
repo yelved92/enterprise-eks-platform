@@ -47,6 +47,7 @@ module "subnets" {
   vpc_id             = module.vpc.vpc_id
   availability_zones = var.availability_zones
   cidr_blocks        = local.subnet_cidrs
+  elbv2_cluster_name = var.environment
   tags               = var.tags
 }
 
@@ -245,7 +246,7 @@ module "node_group" {
 # ------------------------------------------------------------------------------
 data "aws_lb" "kong_nlb" {
   tags = {
-    "kubernetes.io/service-name" = "kong/kong-kong-proxy"
+    "service.k8s.aws/stack" = "kong/kong-kong-proxy"
   }
 }
 
