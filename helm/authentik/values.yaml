@@ -52,6 +52,8 @@ server:
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod
       konghq.com/strip-path: "true"
+      konghq.com/https-redirect-status-code: "301"
+      konghq.com/protocols: "https"
     hosts:
       - auth.yelved.xyz
     tls:
