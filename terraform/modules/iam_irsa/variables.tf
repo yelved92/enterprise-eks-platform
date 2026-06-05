@@ -60,6 +60,12 @@ variable "enable_external_secrets_role" {
   default     = false
 }
 
+variable "enable_load_balancer_controller_role" {
+  description = "Create IRSA role for AWS Load Balancer Controller ServiceAccount (kube-system/aws-load-balancer-controller-sa)."
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Additional tags for all IRSA resources."
   type        = map(string)

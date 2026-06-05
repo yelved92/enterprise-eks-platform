@@ -22,6 +22,8 @@ spec:
     - "https://charts.external-secrets.io/"
     # Phase 6: SSO Portal (Authentik)
     - "https://charts.goauthentik.io"
+    # AWS Load Balancer Controller
+    - "https://aws.github.io/eks-charts"
   # Destinations: only this cluster, only platform-managed namespaces
   # cert-manager needs kube-system for leader election roles
   destinations:

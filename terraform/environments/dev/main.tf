@@ -183,7 +183,7 @@ module "eks" {
   public_access_cidrs        = var.public_access_cidrs
   enabled_cluster_log_types  = var.enabled_cluster_log_types
   cluster_log_retention_days = var.cluster_log_retention_days
-  ebs_csi_role_arn           = module.iam_irsa.ebs_csi_role_arn
+  ebs_csi_role_arn                    = module.iam_irsa.ebs_csi_role_arn
 
   tags = var.tags
 }
@@ -203,10 +203,11 @@ module "iam_irsa" {
   oidc_provider_arn = module.eks.oidc_provider_arn
   oidc_provider_url = replace(module.eks.oidc_provider_url, "https://", "")
 
-  enable_ebs_csi_role          = true
-  enable_vpc_cni_role          = true
-  enable_cert_manager_role     = true
-  enable_external_secrets_role = true
+  enable_ebs_csi_role                    = true
+  enable_vpc_cni_role                    = true
+  enable_cert_manager_role               = true
+  enable_external_secrets_role           = true
+  enable_load_balancer_controller_role   = true
 
   tags = var.tags
 }
@@ -334,6 +335,11 @@ output "eks_oidc_provider_arn" {
 output "eks_oidc_provider_url" {
   description = "URL of the OIDC provider"
   value       = module.eks.oidc_provider_url
+}
+
+output "load_balancer_controller_role_arn" {
+  description = "ARN of the AWS Load Balancer Controller IRSA role"
+  value       = module.iam_irsa.load_balancer_controller_role_arn
 }
 
 output "eks_node_group_id" {

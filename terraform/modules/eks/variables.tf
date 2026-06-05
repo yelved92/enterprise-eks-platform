@@ -95,6 +95,12 @@ variable "ebs_csi_role_arn" {
   default     = null
 }
 
+variable "load_balancer_controller_role_arn" {
+  description = "ARN of the IRSA role for AWS Load Balancer Controller"
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "Additional tags for all resources"
   type        = map(string)

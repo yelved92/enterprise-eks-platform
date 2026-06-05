@@ -67,3 +67,4 @@ output "vpc_cni_addon_version" {
   description = "Version of installed VPC CNI add-on"
   value       = try(aws_eks_addon.vpc_cni.addon_version, null)
 }
+

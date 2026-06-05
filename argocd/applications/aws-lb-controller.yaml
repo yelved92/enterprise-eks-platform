@@ -1,0 +1,61 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aws-lb-controller
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: enterprise-eks-platform
+    argocd.argoproj.io/app-of-apps: "true"
+spec:
+  project: platform
+
+  sources:
+    - repoURL: "https://aws.github.io/eks-charts"
+      chart: aws-load-balancer-controller
+      targetRevision: "1.8.3"
+      helm:
+        valuesObject:
+          clusterName: dev
+          region: us-east-1
+          vpcId: "vpc-0a843139c7068fe10"
+          serviceAccount:
+            create: true
+            name: aws-load-balancer-controller-sa
+            annotations:
+              eks.amazonaws.com/role-arn: "arn:aws:iam::704489329694:role/dev-aws-lb-controller"
+          replicaCount: 2
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          # Enable pod disruption budget for HA
+          podDisruptionBudget:
+            enabled: true
+            minAvailable: 1
+          # Webhook configuration
+          webhookTLS:
+            caCert: ""
+            cert: ""
+            key: ""
+
+  destination:
+    namespace: kube-system
+    server: "https://kubernetes.default.svc"
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

@@ -41,3 +41,13 @@ output "external_secrets_role_name" {
   description = "Name of the External Secrets Operator IRSA role (null if disabled)"
   value       = try(aws_iam_role.external_secrets[0].name, null)
 }
+
+output "load_balancer_controller_role_arn" {
+  description = "ARN of the AWS Load Balancer Controller IRSA role (null if disabled)"
+  value       = try(aws_iam_role.aws_lb_controller[0].arn, null)
+}
+
+output "load_balancer_controller_role_name" {
+  description = "Name of the AWS Load Balancer Controller IRSA role (null if disabled)"
+  value       = try(aws_iam_role.aws_lb_controller[0].name, null)
+}
