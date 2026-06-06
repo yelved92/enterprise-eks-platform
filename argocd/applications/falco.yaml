@@ -26,10 +26,6 @@ spec:
           file_output:
             enabled: false
           
-          # Disable gRPC output
-          grpc_output:
-            enabled: false
-          
           # Resource limits
           resources:
             limits:
@@ -48,14 +44,6 @@ spec:
           kind: modern_ebpf
           loader:
             enabled: false
-        
-        # Disable Falco exporter (not needed for Phase5)
-        falcoExporter:
-          enabled: false
-        
-        # Disable Prometheus metrics (Phase5: no Prometheus yet)
-        prometheus:
-          enabled: false
 
   destination:
     server: https://kubernetes.default.svc
