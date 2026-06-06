@@ -126,3 +126,59 @@
 
 ## Next: Phase 5 — Security Hardening
 
+## 2026-06-04/05 — Session 15: AWS LB Controller + ArgoCD + Authentik SSO + Falco Fix 🚀
+
+### AWS Load Balancer Controller
+- **Problem:** Kong NLB used instance target mode → traffic went through NodePorts (security risk)
+- **Solution:** Installed AWS LB Controller via IRSA role + custom IAM policy, deployed via ArgoCD Helm chart
+- **Live fixes:**
+  - EKS add-on `aws-load-balancer-controller` is NOT a managed add-on — must use Helm chart
+  - AWS-managed policy `AmazonEKSLoadBalancerControllerPolicy` does NOT exist — created custom policy with official permissions
+  - Required subnet tags: `kubernetes.io/role/elb` (public), `kubernetes.io/role/internal-elb` (private_app), `elbv2.k8s.aws/cluster` (all)
+  - Old NLB had to be deleted so LB Controller could recreate it with IP target type
+  - NLB data source tag changed from `kubernetes.io/service-name` to `service.k8s.aws/stack`
+- **Verification:** TargetGroupBinding target type = `ip`, no NodePorts exposed
+
+### Kong HTTPS Redirect
+- **Problem:** `http://auth.yelved.xyz` served unencrypted traffic
+- **Fix:** Added `konghq.com/https-redirect-status-code: 301` + `konghq.com/protocols: https` on Authentik ingress
+- **Verification:** `curl -si http://auth.yelved.xyz` → 301 → `https://auth.yelved.xyz`
+
+### ArgoCD Exposed at `argocd.yelved.xyz`
+- **Problem:** ArgoCD was only accessible via `kubectl port-forward`
+- **Fix:** Created Kong Ingress + TLS cert via cert-manager at `argocd.yelved.xyz`
+- **Live fixes:**
+  - `ERR_TOO_MANY_REDIRECTS` → removed Kong HTTPS redirect annotations + set `server.insecure: true` in `argocd-cmd-params-cm`
+  - Internal port must be 80 (HTTP), not 443 — Kong terminates TLS at edge
+- **ArgoCD deployed manually** via Helm (not Ansible — playbook is outdated)
+- Created `docs/argocd-deployment.md` for redeployment reference
+
+### Authentik as Central IdP
+- **Migrated ArgoCD from Dex to Authentik OIDC**
+- Authentik OIDC Provider created for ArgoCD (slug: `argo-cd`)
+- **Live fixes:**
+  - OIDC issuer URL must match Authentik Application slug exactly (`/application/o/argo-cd/`)
+  - Client secret key in `argocd-secret` must match OIDC config `name:` field exactly (`oidc.Authentik.clientSecret`)
+  - Signing key must be created and assigned to the OIDC Provider
+  - RBAC mapping: `g, authentik Admins, role:admin` in `argocd-rbac-cm`
+- **Verification:** ArgoCD login → Authentik → user dashboard with apps
+- **Note:** Dex deployment scaled to 0 (disabled)
+
+### External Secrets Cleanup
+- **Problem:** ExternalSecret manifests reference non-existent AWS Secrets Manager secrets → Degraded state
+- **Fix:** Removed ExternalSecret/SecretStore manifests from Git, removed directory source from ArgoCD app
+- **Lesson:** `creationPolicy: Owner` on ExternalSecrets means deleting the ExternalSecret also deletes the managed secret — this broke Authentik's `secret_key`, requiring re-setup
+
+### Falco Fix (Chart Upgrade 3.4.0 → 9.0.0)
+- **Problem:** Kernel module compilation failed on AL2023 kernel 6.12 — `fd_is_open` undefined
+- **Fix:** Upgraded chart from 3.4.0 (Falco 0.35.1) to 9.0.0 (Falco 0.44.0) for proper `modern_ebpf` support
+- **Live fixes:**
+  - `driver.kind: modern_ebpf` didn't work on old chart version
+  - Required disabling `grpc_output`, `falcoExporter`, `prometheus` (removed in v9.0.0)
+- **Verification:** `Opening 'syscall' source with modern BPF probe` + shell exec events detected ✅
+
+### Terraform Subnet Tags
+- Added `elbv2_cluster_name` variable + `kubernetes.io/role/elb`, `kubernetes.io/role/internal-elb` tags to subnets module
+- Fixed NLB data source tag from `kubernetes.io/service-name` to `service.k8s.aws/stack`
+- NLB was recreated with new DNS name — Route53 records automatically updated
+
