@@ -43,9 +43,9 @@ spec:
         daemonset:
           enabled: true
         
-        # Use eBPF probe (modern approach, no kernel module needed)
-        ebpf:
-          enabled: true
+        # Use modern eBPF probe (no kernel module compilation needed)
+        driver:
+          kind: modern_ebpf
         
         # Disable Falco exporter (not needed for Phase5)
         falcoExporter:
