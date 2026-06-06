@@ -46,6 +46,8 @@ spec:
         # Use modern eBPF probe (no kernel module compilation needed)
         driver:
           kind: modern_ebpf
+          loader:
+            enabled: false
         
         # Disable Falco exporter (not needed for Phase5)
         falcoExporter:
