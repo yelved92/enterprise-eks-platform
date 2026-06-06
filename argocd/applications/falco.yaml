@@ -13,7 +13,7 @@ spec:
   source:
     repoURL: https://falcosecurity.github.io/charts/
     chart: falco
-    targetRevision: 3.4.0  # Pinned version for stability
+    targetRevision: 9.0.0  # Pin to latest stable chart
     helm:
       values: |
         # Falco configuration
