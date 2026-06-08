@@ -21,11 +21,11 @@ grafana:
   # Resource limits for Grafana
   resources:
     limits:
-      cpu: 200m
-      memory: 256Mi
+      cpu: 300m
+      memory: 512Mi
     requests:
       cpu: 50m
-      memory: 64Mi
+      memory: 128Mi
   
   # Enable test datasource (Prometheus is auto-configured)
   sidecar:
