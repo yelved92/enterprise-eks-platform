@@ -24,6 +24,8 @@ spec:
     - "https://charts.goauthentik.io"
     # AWS Load Balancer Controller
     - "https://aws.github.io/eks-charts"
+    # Phase 8: Observability (Prometheus + Grafana)
+    - "https://prometheus-community.github.io/helm-charts"
   # Destinations: only this cluster, only platform-managed namespaces
   # cert-manager needs kube-system for leader election roles
   destinations:

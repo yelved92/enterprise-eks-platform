@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana
+  namespace: monitoring
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    konghq.com/strip-path: "true"
+    konghq.com/https-redirect-status-code: "301"
+    konghq.com/protocols: "https"
+spec:
+  ingressClassName: kong
+  rules:
+    - host: grafana.yelved.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-grafana
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - grafana.yelved.xyz
+      secretName: grafana-tls

@@ -1,0 +1,106 @@
+# ==============================================================================
+# kube-prometheus-stack Helm Values
+# ==============================================================================
+# Deployed via ArgoCD GitOps. Customize monitoring settings here.
+# Uses upstream chart: https://prometheus-community.github.io/helm-charts
+# ------------------------------------------------------------------------------
+
+# Grafana configuration
+grafana:
+  adminPassword: "admin"  # Change via Grafana UI after first login
+  defaultDashboardsEnabled: true
+  
+  # Disable built-in ingress — use separate Kong ingress
+  ingress:
+    enabled: false
+  
+  # Disable persistence (dashboards come from config, not stateful)
+  persistence:
+    enabled: false
+  
+  # Resource limits for Grafana
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  
+  # Enable test datasource (Prometheus is auto-configured)
+  sidecar:
+    datasources:
+      enabled: true
+      defaultDatasourceEnabled: true
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+
+# Prometheus configuration
+prometheus:
+  # Retention period for stored metrics
+  retention: 7d
+  
+  # Storage — 3GB on default gp2 storage class
+  prometheusSpec:
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 3Gi
+  
+  # Resource limits for Prometheus
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  
+  # Ingress disabled — Prometheus is cluster-internal
+  ingress:
+    enabled: false
+
+# AlertManager configuration
+alertmanager:
+  enabled: true
+  # No notification channels configured yet (Phase 8+)
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ['namespace']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: 'null'
+    receivers:
+      - name: 'null'
+
+# Node exporter — DaemonSet on all nodes
+nodeExporter:
+  enabled: true
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 32Mi
+
+# kube-state-metrics — cluster state metrics
+kubeStateMetrics:
+  enabled: true
+
+# Disable default rules and alerts that might not apply
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: false  # Not using etcd directly (EKS manages it)
+    configReloaders: true
+    kubeScheduler: false  # Not exposed in EKS

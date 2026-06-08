@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: enterprise-eks-platform
+    argocd.argoproj.io/app-of-apps: "true"
+spec:
+  project: platform
+
+  sources:
+    # Source 1: Upstream Helm chart
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 86.2.0
+      helm:
+        valueFiles:
+          - $values/observability/kube-prometheus-stack-values.yaml
+
+    # Source 2: Local Git repo with values + ingress templates
+    - repoURL: https://github.com/yelved92/enterprise-eks-platform.git
+      targetRevision: feat/phase-5-security
+      ref: values
+
+    # Source 3: Local ingress template
+    - repoURL: https://github.com/yelved92/enterprise-eks-platform.git
+      targetRevision: feat/phase-5-security
+      path: observability
+      directory:
+        recurse: true
+        include: "grafana-ingress.yaml"
+
+  destination:
+    namespace: monitoring
+    server: "https://kubernetes.default.svc"
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
