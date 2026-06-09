@@ -177,33 +177,109 @@ policy.csv: |
 
 ## Redeployment Notes
 
-If ArgoCD needs to be redeployed from scratch:
+If ArgoCD needs to be redeployed from scratch, follow these steps in order:
 
-1. **Use Helm** (not the Ansible playbook — it's outdated):
-   ```bash
-   helm upgrade --install argocd argo/argo-cd \
-     --namespace argocd \
-     --create-namespace \
-     --version 5.46.0
-   ```
+### Step 1: Install ArgoCD via Helm
+```bash
+helm repo add argo https://argoproj.github.io/argo-helm
+helm repo update
 
-2. **After Helm install, apply these fixes:**
-   - Create `argocd-cmd-params-cm` with `server.insecure: "true"`
-   - Update `argocd-cm` with OIDC config pointing to Authentik
-   - Update `argocd-rbac-cm` with group mappings
-   - Store client secret in `argocd-secret` under `oidc.Authentik.clientSecret`
+helm upgrade --install argocd argo/argo-cd \
+  --namespace argocd \
+  --create-namespace \
+  --version 5.46.0 \
+  --wait \
+  --timeout 10m
+```
 
-3. **Create the ingress:**
-   - Port 80 to backend (not 443)
-   - No `https-redirect-status-code` or `protocols` annotations
-   - TLS via cert-manager `cert-manager.io/cluster-issuer: letsencrypt-prod`
+### Step 2: Apply Post-Install ConfigMaps
+```bash
+# Create argocd-cmd-params-cm (disables TLS redirect — Kong handles TLS at edge)
+kubectl apply -f - <<'EOF'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cmd-params-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: argocd
+data:
+  server.insecure: "true"
+EOF
 
-4. **Disable Dex:** Scale to 0
-   ```bash
-   kubectl scale deployment argocd-dex-server -n argocd --replicas=0
-   ```
+# Update argocd-cm with Authentik OIDC config
+kubectl patch configmap argocd-cm -n argocd --type=merge -p='{
+  "data": {
+    "url": "https://argocd.yelved.xyz",
+    "oidc.config": "name: Authentik\nissuer: https://auth.yelved.xyz/application/o/argo-cd/\nclientID: xxxxxx\nrequestedScopes: [\"openid\", \"profile\", \"email\"]\n"
+  }
+}'
 
-5. **Verify in Authentik admin:**
-   - OIDC Provider exists with signing key assigned
-   - Application exists with slug matching the issuer URL
-   - Client ID and Client Secret are correct
+# Store OIDC client secret in argocd-secret
+kubectl patch secret argocd-secret -n argocd --type=merge -p='{
+  "data": {
+    "oidc.Authentik.clientSecret": "'$(echo -n 'xxxxxxxxx' | base64 -w0)'"
+  }
+}'
+
+# Update RBAC to map authentik Admins group to admin role
+kubectl patch configmap argocd-rbac-cm -n argocd --type=merge -p='{
+  "data": {
+    "policy.default": "role:readonly",
+    "policy.csv": "g, authentik Admins, role:admin\np, role:admin, *, *, *, allow\n"
+  }
+}'
+
+# Restart ArgoCD server to pick up new config
+kubectl rollout restart deployment argocd-server -n argocd
+```
+
+### Step 3: Create Kong Ingress
+```bash
+kubectl apply -f - <<'EOF'
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server
+  namespace: argocd
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    konghq.com/strip-path: "true"
+spec:
+  ingressClassName: kong
+  tls:
+    - hosts:
+        - argocd.yelved.xyz
+      secretName: argocd-server-tls
+  rules:
+    - host: argocd.yelved.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  number: 80
+EOF
+```
+
+### Step 4: Disable Dex (old SSO)
+```bash
+kubectl scale deployment argocd-dex-server -n argocd --replicas=0
+```
+
+### Step 5: Apply ArgoCD Project (bootstrap AppProject)
+```bash
+# The project in Git doesn't auto-sync — apply it manually
+kubectl apply -f argocd/projects/platform.yaml
+```
+
+### Step 6: Verify
+1. Wait for TLS certificate: `kubectl get certificate -n argocd argocd-server-tls`
+2. Visit `https://argocd.yelved.xyz` — should see "LOGIN VIA AUTHENTIK" button
+3. Log in via Authentik — should see all apps
+4. Bootstrap app will create all child applications automatically
+
+> **Note:** If authentication shows an unknown/invalid client ID, the OIDC Provider in Authentik may need to be recreated. See the Authentik section above for provider details.

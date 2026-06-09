@@ -8,6 +8,7 @@ metadata:
     konghq.com/strip-path: "true"
     konghq.com/https-redirect-status-code: "301"
     konghq.com/protocols: "https"
+    konghq.com/plugins: oidc
 spec:
   ingressClassName: kong
   rules:

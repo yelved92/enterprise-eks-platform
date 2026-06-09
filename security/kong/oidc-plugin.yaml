@@ -1,0 +1,22 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: oidc
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: enterprise-eks-platform
+config:
+  issuer: "https://auth.yelved.xyz/application/o/platform-sso/"
+  client_id: "PLACEHOLDER_CLIENT_ID"
+  # client_secret must be patched manually after apply:
+  # kubectl patch kongplugin oidc -n monitoring --type=merge -p='{"config":{"client_secret":"<SECRET>"}}'
+  redirect_uri: "https://grafana.yelved.xyz/"
+  session_secret: "CHANGEME-SESSION-SECRET"
+  bearer_only: false
+  realm: "authentik"
+  upstream_headers_map:
+    x-authentik-username: "$.preferred_username"
+    x-authentik-email: "$.email"
+  logout_path: "/logout"
+plugin: openid-connect
